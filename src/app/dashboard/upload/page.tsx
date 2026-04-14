@@ -2,13 +2,11 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getSources } from '@/lib/data/sources'
+import { getCompanyByEmail } from '@/lib/data/companies'
 import Box from '@mui/material/Box'
-import AppBar from '@mui/material/AppBar'
-import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
-import Button from '@mui/material/Button'
 import Container from '@mui/material/Container'
-import Breadcrumbs from '@mui/material/Breadcrumbs'
+import Avatar from '@mui/material/Avatar'
 import UploadForm from './UploadForm'
 
 export default async function UploadPage() {
@@ -19,39 +17,71 @@ export default async function UploadPage() {
     redirect('/login')
   }
 
+  const company = await getCompanyByEmail(user.email!)
+  if (!company) {
+    redirect('/login')
+  }
+
   const sources = await getSources()
   const hbeSource = sources.filter((s) => s.name === 'HBE')
 
+  const userInitials = company.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
-      <AppBar position="static" color="default" elevation={1}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Faithful Registry
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
-            {user.email}
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Box
+        component="header"
+        sx={{
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, color: 'white', mr: 6 }}
+            >
+              Carbon<span style={{ color: '#4ade80' }}>Leap</span>
+            </Typography>
+
+            <Box sx={{ display: 'flex', gap: 4, flexGrow: 1 }}>
+              <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+                <Typography sx={{ color: 'grey.500' }}>Portfolio</Typography>
+              </Link>
+              <Link href="/dashboard/uploads" style={{ textDecoration: 'none' }}>
+                <Typography sx={{ color: 'white', fontWeight: 500 }}>
+                  Uploads
+                </Typography>
+              </Link>
+              <Typography sx={{ color: 'grey.500' }}>Sources</Typography>
+              <Typography sx={{ color: 'grey.500' }}>Settings</Typography>
+            </Box>
+
+            <Avatar sx={{ bgcolor: '#4ade80', color: 'black', fontWeight: 600 }}>
+              {userInitials}
+            </Avatar>
+          </Box>
+        </Container>
+      </Box>
 
       <Container maxWidth="md" sx={{ py: 4 }}>
-        <Breadcrumbs sx={{ mb: 3 }}>
-          <Link href="/dashboard" style={{ color: '#0d9488', textDecoration: 'none' }}>
-            Dashboard
-          </Link>
-          <Typography color="text.primary">Upload</Typography>
-        </Breadcrumbs>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
+            Upload certificates
+          </Typography>
+          <Typography sx={{ color: 'grey.500' }}>
+            Import certificate data from CSV files
+          </Typography>
+        </Box>
 
         <UploadForm sources={hbeSource} />
-
-        <Box sx={{ mt: 3 }}>
-          <Link href="/dashboard">
-            <Button variant="text">
-              Back to Dashboard
-            </Button>
-          </Link>
-        </Box>
       </Container>
     </Box>
   )

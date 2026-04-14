@@ -1,14 +1,13 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { getCompanyByEmail, getCompanySourcesWithStats, getCompanyUploads } from '@/lib/data/companies'
+import { getCompanyByEmail, getCompanySourcesWithStats } from '@/lib/data/companies'
+import { getHbeCertificates, getHbeStats } from '@/lib/data/certificates'
+import { getSources } from '@/lib/data/sources'
 import Box from '@mui/material/Box'
-import AppBar from '@mui/material/AppBar'
-import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import Container from '@mui/material/Container'
-import Alert from '@mui/material/Alert'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Chip from '@mui/material/Chip'
@@ -18,13 +17,14 @@ import TableCell from '@mui/material/TableCell'
 import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
-import Paper from '@mui/material/Paper'
+import Avatar from '@mui/material/Avatar'
 import { logout } from '../(auth)/actions'
 
-const sourceColors: Record<string, string> = {
-  teal: '#0d9488',
-  coral: '#f97316',
-  amber: '#f59e0b',
+const hbeTypeLabels: Record<string, { label: string; color: string }> = {
+  'HBE-G': { label: 'HBE-G advanced', color: '#4ade80' },
+  'HBE-C': { label: 'HBE-C', color: '#60a5fa' },
+  'HBE-IXB': { label: 'HBE-IXB', color: '#a78bfa' },
+  'HBE-O': { label: 'HBE-O', color: '#fbbf24' },
 }
 
 export default async function DashboardPage() {
@@ -36,56 +36,252 @@ export default async function DashboardPage() {
   }
 
   const company = await getCompanyByEmail(user.email!)
-
   if (!company) {
     redirect('/login')
   }
 
+  const sources = await getSources()
+  const hbeSource = sources.find((s) => s.name === 'HBE')
   const sourcesWithStats = await getCompanySourcesWithStats(company.id)
-  const uploads = await getCompanyUploads(company.id)
+
+  let hbeStats = null
+  let hbeCertificates: Awaited<ReturnType<typeof getHbeCertificates>> = []
+
+  if (hbeSource) {
+    hbeStats = await getHbeStats(hbeSource.id)
+    hbeCertificates = await getHbeCertificates(hbeSource.id, 5)
+  }
+
+  const userInitials = company.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
-      <AppBar position="static" color="default" elevation={1}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Faithful Registry
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
-            {user.email}
-          </Typography>
-          <form action={logout}>
-            <Button type="submit" color="inherit" size="small">
-              Sign out
-            </Button>
-          </form>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Box
+        component="header"
+        sx={{
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, color: 'white', mr: 6 }}
+            >
+              Carbon<span style={{ color: '#4ade80' }}>Leap</span>
+            </Typography>
+
+            <Box sx={{ display: 'flex', gap: 4, flexGrow: 1 }}>
+              <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+                <Typography sx={{ color: 'white', fontWeight: 500 }}>
+                  Portfolio
+                </Typography>
+              </Link>
+              <Link href="/dashboard/uploads" style={{ textDecoration: 'none' }}>
+                <Typography sx={{ color: 'grey.500' }}>Uploads</Typography>
+              </Link>
+              <Typography sx={{ color: 'grey.500' }}>Sources</Typography>
+              <Typography sx={{ color: 'grey.500' }}>Settings</Typography>
+            </Box>
+
+            <Avatar sx={{ bgcolor: '#4ade80', color: 'black', fontWeight: 600 }}>
+              {userInitials}
+            </Avatar>
+          </Box>
+        </Container>
+      </Box>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="warning" sx={{ mb: 4 }}>
-          Sources use different units and methodologies — totals across sources
-          are not shown as they would create false comparability.
-        </Alert>
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-          <Typography variant="h5">
-            Your Carbon Certificate Portfolio
-          </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+          <Box>
+            <Typography variant="h4" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
+              Your portfolio
+            </Typography>
+            <Typography sx={{ color: 'grey.500' }}>
+              {company.name} · {sourcesWithStats.length} active sources
+            </Typography>
+          </Box>
           <Link href="/dashboard/upload">
-            <Button variant="contained">
-              Upload Certificates
+            <Button
+              variant="outlined"
+              sx={{
+                borderColor: 'grey.700',
+                color: 'white',
+                '&:hover': { borderColor: 'grey.500' },
+              }}
+            >
+              + Upload certificates
             </Button>
           </Link>
         </Box>
 
-        {sourcesWithStats.length === 0 ? (
-          <Card>
+        <Box
+          sx={{
+            bgcolor: '#fef3c7',
+            borderRadius: 2,
+            p: 2,
+            mb: 4,
+          }}
+        >
+          <Typography sx={{ color: '#92400e' }}>
+            Sources use different units and methodologies — totals across sources are not shown as they would create false comparability.
+          </Typography>
+        </Box>
+
+        {hbeStats && hbeStats.totalCertificates > 0 ? (
+          <Card sx={{ bgcolor: 'background.paper', mb: 4 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: '#4ade80',
+                    }}
+                  />
+                  <Box>
+                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
+                      HBE
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                      Dutch biofuel tickets · NEa Registry Netherlands
+                    </Typography>
+                  </Box>
+                </Box>
+                <Chip
+                  label="GJ"
+                  sx={{
+                    bgcolor: 'transparent',
+                    border: '1px solid #4ade80',
+                    color: '#4ade80',
+                    fontWeight: 600,
+                  }}
+                />
+              </Box>
+
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: 4,
+                  py: 3,
+                  borderTop: '1px solid',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Certificates
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+                    {hbeStats.totalCertificates}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                    total records
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Total Energy
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+                    {hbeStats.totalEnergyGj.toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                    GJ
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Latest Issue
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+                    {hbeStats.latestDeliveryDate || 'N/A'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                    DD/MM/YYYY format
+                  </Typography>
+                </Box>
+              </Box>
+
+              {hbeCertificates.length > 0 && (
+                <TableContainer sx={{ mt: 2 }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Certificate ID</TableCell>
+                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Energy (GJ)</TableCell>
+                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Fuel type</TableCell>
+                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Issue date</TableCell>
+                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Supplier</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {hbeCertificates.map((cert) => {
+                        const typeInfo = hbeTypeLabels[cert.hbe_type] || { label: cert.hbe_type, color: '#6b7280' }
+                        return (
+                          <TableRow key={cert.id}>
+                            <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                              {cert.certificate_id}
+                            </TableCell>
+                            <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                              {cert.energy_delivered_gj}
+                            </TableCell>
+                            <TableCell sx={{ borderColor: 'divider' }}>
+                              <Chip
+                                label={typeInfo.label}
+                                size="small"
+                                sx={{
+                                  bgcolor: `${typeInfo.color}20`,
+                                  color: typeInfo.color,
+                                  border: `1px solid ${typeInfo.color}40`,
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                              {cert.delivery_date}
+                            </TableCell>
+                            <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                              {cert.supplier_name}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+
+              {hbeStats.totalCertificates > 5 && (
+                <Box sx={{ textAlign: 'center', mt: 2 }}>
+                  <Link href="/dashboard/certificates" style={{ textDecoration: 'none' }}>
+                    <Typography
+                      sx={{ color: 'grey.500', cursor: 'pointer', '&:hover': { color: 'grey.300' } }}
+                    >
+                      View all {hbeStats.totalCertificates} certificates ↓
+                    </Typography>
+                  </Link>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card sx={{ bgcolor: 'background.paper' }}>
             <CardContent sx={{ textAlign: 'center', py: 6 }}>
-              <Typography variant="h6" color="text.secondary" gutterBottom>
+              <Typography variant="h6" sx={{ color: 'grey.500', mb: 1 }}>
                 No certificates yet
               </Typography>
-              <Typography color="text.secondary" sx={{ mb: 3 }}>
+              <Typography sx={{ color: 'grey.600', mb: 3 }}>
                 Upload your first CSV to get started
               </Typography>
               <Link href="/dashboard/upload">
@@ -95,112 +291,15 @@ export default async function DashboardPage() {
               </Link>
             </CardContent>
           </Card>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {sourcesWithStats.map(({ source, certificateCount, uploadCount }) => (
-              <Card
-                key={source.id}
-                sx={{
-                  borderLeft: 4,
-                  borderColor: sourceColors[source.color || ''] || '#6b7280',
-                }}
-              >
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Typography variant="h6">{source.name}</Typography>
-                    <Chip
-                      label={source.unit_label}
-                      size="small"
-                      sx={{
-                        bgcolor: sourceColors[source.color || ''] || '#6b7280',
-                        color: 'white',
-                      }}
-                    />
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {source.methodology_description}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 4 }}>
-                    <Box>
-                      <Typography
-                        variant="h4"
-                        sx={{ color: sourceColors[source.color || ''] || '#6b7280' }}
-                      >
-                        {certificateCount}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        certificates
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="h4" color="text.secondary">
-                        {uploadCount}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        uploads
-                      </Typography>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
         )}
 
-        {uploads.length > 0 && (
-          <Box sx={{ mt: 6 }}>
-            <Typography variant="h6" gutterBottom>
-              Upload History
-            </Typography>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>File</TableCell>
-                    <TableCell>Source</TableCell>
-                    <TableCell>Certificates</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Date</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {uploads.map((upload) => (
-                    <TableRow key={upload.id}>
-                      <TableCell>{upload.filename}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={upload.source.name}
-                          size="small"
-                          sx={{
-                            bgcolor: sourceColors[upload.source.color || ''] || '#6b7280',
-                            color: 'white',
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>{upload.certificateCount}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={upload.status}
-                          size="small"
-                          color={
-                            upload.status === 'done'
-                              ? 'success'
-                              : upload.status === 'failed'
-                              ? 'error'
-                              : 'warning'
-                          }
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {new Date(upload.uploaded_at).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        )}
+        <Box sx={{ mt: 4, textAlign: 'center' }}>
+          <form action={logout}>
+            <Button type="submit" sx={{ color: 'grey.500' }}>
+              Sign out
+            </Button>
+          </form>
+        </Box>
       </Container>
     </Box>
   )
