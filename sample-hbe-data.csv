@@ -1,0 +1,9 @@
+certificate_id,hbe_type,energy_delivered_gj,hbes_issued,double_counting,multiplier,feedstock,nta8003_code,delivery_date,booking_date,transport_sector,supplier_name,rev_account_id,verification_status
+REV-2024-001,HBE-G,150.5,301,true,2,used cooking oil,NTA-UCO-001,15/01/2024,20/01/2024,road,GreenFuels BV,NL-REV-12345,verified
+REV-2024-002,HBE-G,200.0,400,true,2,agricultural residue,NTA-AGR-002,18/01/2024,22/01/2024,road,BioEnergy NL,NL-REV-12346,verified
+REV-2024-003,HBE-C,100.0,100,false,1,corn ethanol,NTA-CRN-001,20/01/2024,25/01/2024,road,EthanolCo,NL-REV-12347,verified
+REV-2024-004,HBE-IXB,75.0,150,true,2,waste oils,NTA-WST-003,22/01/2024,27/01/2024,maritime,MarineBio BV,NL-REV-12348,pending
+REV-2024-005,HBE-O,50.0,40,false,0.8,palm oil,NTA-PLM-001,25/01/2024,30/01/2024,maritime,TropicalFuels,NL-REV-12349,verified
+REV-2024-006,HBE-G,180.0,360,true,2,animal fats,NTA-ANF-002,28/01/2024,02/02/2024,aviation,SkyGreen BV,NL-REV-12350,verified
+REV-2024-007,HBE-G,220.0,264,true,1.2,used cooking oil,NTA-UCO-001,01/02/2024,05/02/2024,aviation,AeroFuels NL,NL-REV-12351,verified
+REV-2024-008,HBE-C,90.0,90,false,1,sugar beet,NTA-SGB-001,05/02/2024,10/02/2024,inland_waterway,RiverBio BV,NL-REV-12352,pending
