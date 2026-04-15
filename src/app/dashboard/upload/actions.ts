@@ -80,7 +80,7 @@ export async function uploadHbeCertificates(formData: FormData): Promise<UploadR
       company_id: company.id,
       source_id: sourceId,
       filename: file.name,
-      status: 'processing',
+      status: 'done',
     })
     .select('id')
     .single()
@@ -131,12 +131,6 @@ export async function uploadHbeCertificates(formData: FormData): Promise<UploadR
       return { success: false, error: certError.message }
     }
   }
-
-  const finalStatus = validation.invalid.length === 0 ? 'done' : 'done'
-  await supabase
-    .from('uploads')
-    .update({ status: finalStatus })
-    .eq('id', upload.id)
 
   revalidatePath('/dashboard')
 
