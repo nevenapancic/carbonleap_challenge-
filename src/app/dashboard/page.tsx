@@ -70,24 +70,36 @@ export default async function DashboardPage({
   let totalCount = 0
 
   if (hbeSource) {
-    hbeStats = await getHbeStats(hbeSource.id)
+    hbeStats = await getHbeStats(hbeSource.id, company.id)
 
-    const { data: allCerts, count } = await supabase
-      .from('certificates')
-      .select('id, raw_data', { count: 'exact' })
+    // Get upload IDs for this company and source
+    const { data: uploads } = await supabase
+      .from('uploads')
+      .select('id')
+      .eq('company_id', company.id)
       .eq('source_id', hbeSource.id)
-      .order('created_at', { ascending: false })
-      .range((currentPage - 1) * validPerPage, currentPage * validPerPage - 1)
 
-    if (allCerts) {
-      hbeCertificates = allCerts.map((cert) => ({
-        id: cert.id,
-        ...(cert.raw_data as HbeCertificateData),
-      }))
+    if (uploads && uploads.length > 0) {
+      const uploadIds = uploads.map(u => u.id)
+
+      const { data: allCerts, count } = await supabase
+        .from('certificates')
+        .select('id, raw_data', { count: 'exact' })
+        .eq('source_id', hbeSource.id)
+        .in('upload_id', uploadIds)
+        .order('created_at', { ascending: false })
+        .range((currentPage - 1) * validPerPage, currentPage * validPerPage - 1)
+
+      if (allCerts) {
+        hbeCertificates = allCerts.map((cert) => ({
+          id: cert.id,
+          ...(cert.raw_data as HbeCertificateData),
+        }))
+      }
+
+      totalCount = count || 0
+      totalPages = Math.ceil(totalCount / validPerPage)
     }
-
-    totalCount = count || 0
-    totalPages = Math.ceil(totalCount / validPerPage)
   }
 
   const userInitials = company.name

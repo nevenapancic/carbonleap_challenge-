@@ -3,13 +3,25 @@ import type { HbeCertificateData } from '@/lib/types/database'
 
 export type HbeCertificateWithId = HbeCertificateData & { id: string }
 
-export async function getHbeCertificates(sourceId: string, limit?: number): Promise<HbeCertificateWithId[]> {
+export async function getHbeCertificates(sourceId: string, companyId: string, limit?: number): Promise<HbeCertificateWithId[]> {
   const supabase = await createClient()
+
+  // First get upload IDs for this company and source
+  const { data: uploads } = await supabase
+    .from('uploads')
+    .select('id')
+    .eq('company_id', companyId)
+    .eq('source_id', sourceId)
+
+  if (!uploads || uploads.length === 0) return []
+
+  const uploadIds = uploads.map(u => u.id)
 
   let query = supabase
     .from('certificates')
     .select('id, raw_data')
     .eq('source_id', sourceId)
+    .in('upload_id', uploadIds)
     .order('created_at', { ascending: false })
 
   if (limit) {
@@ -43,13 +55,31 @@ function formatDate(date: Date): string {
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
-export async function getHbeStats(sourceId: string): Promise<HbeStats> {
+export async function getHbeStats(sourceId: string, companyId: string): Promise<HbeStats> {
   const supabase = await createClient()
+
+  const { data: uploads } = await supabase
+    .from('uploads')
+    .select('id')
+    .eq('company_id', companyId)
+    .eq('source_id', sourceId)
+
+  if (!uploads || uploads.length === 0) {
+    return {
+      totalCertificates: 0,
+      totalEnergyGj: 0,
+      totalHbesIssued: 0,
+      latestDeliveryDate: null,
+    }
+  }
+
+  const uploadIds = uploads.map(u => u.id)
 
   const { data } = await supabase
     .from('certificates')
     .select('raw_data')
     .eq('source_id', sourceId)
+    .in('upload_id', uploadIds)
 
   if (!data || data.length === 0) {
     return {

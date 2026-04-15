@@ -46,8 +46,8 @@ export default async function CertificatesPage() {
   let hbeCertificates: Awaited<ReturnType<typeof getHbeCertificates>> = []
 
   if (hbeSource) {
-    hbeStats = await getHbeStats(hbeSource.id)
-    hbeCertificates = await getHbeCertificates(hbeSource.id)
+    hbeStats = await getHbeStats(hbeSource.id, company.id)
+    hbeCertificates = await getHbeCertificates(hbeSource.id, company.id)
   }
 
   const userInitials = company.name
