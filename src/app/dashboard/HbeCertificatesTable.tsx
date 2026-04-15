@@ -116,10 +116,14 @@ export default function HbeCertificatesTable({
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Type</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Energy (GJ)</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>HBEs Issued</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>GHG Reduction</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Double Counting</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Multiplier</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Feedstock</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>NTA8003 Code</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>NTA8003</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Country</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certification</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>PoS Number</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Delivery Date</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Booking Date</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Sector</TableCell>
@@ -156,6 +160,17 @@ export default function HbeCertificatesTable({
                   </TableCell>
                   <TableCell sx={{ borderColor: 'divider' }}>
                     <Chip
+                      label={`${cert.ghg_reduction_percentage}%`}
+                      size="small"
+                      sx={{
+                        bgcolor: cert.ghg_reduction_percentage >= 65 ? '#4ade8020' : '#f59e0b20',
+                        color: cert.ghg_reduction_percentage >= 65 ? '#4ade80' : '#f59e0b',
+                        fontSize: '0.7rem',
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ borderColor: 'divider' }}>
+                    <Chip
                       label={cert.double_counting ? 'Yes' : 'No'}
                       size="small"
                       sx={{
@@ -173,6 +188,23 @@ export default function HbeCertificatesTable({
                   </TableCell>
                   <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.75rem' }}>
                     {cert.nta8003_code}
+                  </TableCell>
+                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
+                    {cert.production_country}
+                  </TableCell>
+                  <TableCell sx={{ borderColor: 'divider' }}>
+                    <Chip
+                      label={cert.sustainability_scheme}
+                      size="small"
+                      sx={{
+                        bgcolor: '#3b82f620',
+                        color: '#3b82f6',
+                        fontSize: '0.65rem',
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                    {cert.pos_number}
                   </TableCell>
                   <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {cert.delivery_date}

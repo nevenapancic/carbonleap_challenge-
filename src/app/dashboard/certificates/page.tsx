@@ -165,10 +165,14 @@ export default async function CertificatesPage() {
                   <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Certificate ID</TableCell>
                   <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Energy (GJ)</TableCell>
                   <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>HBEs Issued</TableCell>
-                  <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Fuel type</TableCell>
+                  <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Type</TableCell>
+                  <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>GHG Reduction</TableCell>
                   <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Feedstock</TableCell>
+                  <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Country</TableCell>
+                  <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Certification</TableCell>
+                  <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>PoS Number</TableCell>
                   <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Sector</TableCell>
-                  <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Delivery date</TableCell>
+                  <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Delivery Date</TableCell>
                   <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Supplier</TableCell>
                 </TableRow>
               </TableHead>
@@ -197,8 +201,35 @@ export default async function CertificatesPage() {
                           }}
                         />
                       </TableCell>
+                      <TableCell sx={{ borderColor: 'divider' }}>
+                        <Chip
+                          label={`${cert.ghg_reduction_percentage}%`}
+                          size="small"
+                          sx={{
+                            bgcolor: cert.ghg_reduction_percentage >= 65 ? '#4ade8020' : '#f59e0b20',
+                            color: cert.ghg_reduction_percentage >= 65 ? '#4ade80' : '#f59e0b',
+                          }}
+                        />
+                      </TableCell>
                       <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
                         {cert.feedstock}
+                      </TableCell>
+                      <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                        {cert.production_country}
+                      </TableCell>
+                      <TableCell sx={{ borderColor: 'divider' }}>
+                        <Chip
+                          label={cert.sustainability_scheme}
+                          size="small"
+                          sx={{
+                            bgcolor: '#3b82f620',
+                            color: '#3b82f6',
+                            fontSize: '0.75rem',
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                        {cert.pos_number}
                       </TableCell>
                       <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
                         {cert.transport_sector}

@@ -44,6 +44,8 @@ export type TransportSector = 'road' | 'maritime' | 'aviation' | 'inland_waterwa
 
 export type VerificationStatus = 'verified' | 'pending'
 
+export type SustainabilityScheme = 'ISCC-EU' | 'ISCC-CORSIA' | 'REDcert' | 'RSB-EU' | 'KZR INiG' | '2BSvs' | 'Other'
+
 export type HbeCertificateData = {
   certificate_id: string
   hbe_type: HbeType
@@ -59,4 +61,8 @@ export type HbeCertificateData = {
   supplier_name: string
   rev_account_id: string
   verification_status: VerificationStatus
+  ghg_reduction_percentage: number
+  sustainability_scheme: SustainabilityScheme
+  production_country: string
+  pos_number: string
 }
