@@ -74,12 +74,26 @@ export async function uploadHbeCertificates(formData: FormData): Promise<UploadR
 
   const validation = validateHbeRows(normalizedRows)
 
+  const timestamp = Date.now()
+  const filePath = `${company.id}/${timestamp}_${file.name}`
+
+  const fileBuffer = await file.arrayBuffer()
+  const { error: storageError } = await supabase.storage
+    .from('certificates')
+    .upload(filePath, fileBuffer, {
+      contentType: 'text/csv',
+      upsert: false,
+    })
+
+  const fileUrl = storageError ? null : filePath
+
   const { data: upload, error: uploadError } = await supabase
     .from('uploads')
     .insert({
       company_id: company.id,
       source_id: sourceId,
       filename: file.name,
+      file_url: fileUrl,
       status: 'done',
     })
     .select('id')

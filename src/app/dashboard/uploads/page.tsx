@@ -15,6 +15,7 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Avatar from '@mui/material/Avatar'
 import Button from '@mui/material/Button'
+import DownloadButton from './DownloadButton'
 
 const sourceColors: Record<string, string> = {
   teal: '#4ade80',
@@ -129,6 +130,7 @@ export default async function UploadsPage() {
                     <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Certificates</TableCell>
                     <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Status</TableCell>
                     <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Uploaded</TableCell>
+                    <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Download</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -184,6 +186,13 @@ export default async function UploadsPage() {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
+                      </TableCell>
+                      <TableCell sx={{ borderColor: 'divider' }}>
+                        {upload.file_url ? (
+                          <DownloadButton fileUrl={upload.file_url} filename={upload.filename || 'download.csv'} />
+                        ) : (
+                          <Typography sx={{ color: 'grey.600', fontSize: '0.75rem' }}>—</Typography>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

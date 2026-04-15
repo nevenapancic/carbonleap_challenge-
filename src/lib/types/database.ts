@@ -26,6 +26,7 @@ export type Upload = {
   company_id: string;
   source_id: string;
   filename: string | null;
+  file_url: string | null;
   status: UploadStatus;
   uploaded_at: string;
 };
