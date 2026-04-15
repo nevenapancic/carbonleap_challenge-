@@ -11,43 +11,12 @@ import Container from '@mui/material/Container'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Chip from '@mui/material/Chip'
-import Table from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableContainer from '@mui/material/TableContainer'
-import TableHead from '@mui/material/TableHead'
-import TableRow from '@mui/material/TableRow'
 import Avatar from '@mui/material/Avatar'
 import { logout } from '../(auth)/actions'
-import type { HbeCertificateData } from '@/lib/types/database'
-import PaginationControls from './PaginationControls'
+import HbeCertificatesTable from './HbeCertificatesTable'
+import { getPaginatedCertificates } from './actions'
 
-const hbeTypeLabels: Record<string, { label: string; color: string }> = {
-  'HBE-G': { label: 'HBE-G advanced', color: '#4ade80' },
-  'HBE-C': { label: 'HBE-C', color: '#60a5fa' },
-  'HBE-IXB': { label: 'HBE-IXB', color: '#a78bfa' },
-  'HBE-O': { label: 'HBE-O', color: '#fbbf24' },
-}
-
-const transportSectorLabels: Record<string, string> = {
-  road: 'Road',
-  maritime: 'Maritime',
-  aviation: 'Aviation',
-  inland_waterway: 'Inland Waterway',
-}
-
-type SearchParams = Promise<{ page?: string; perPage?: string }>
-
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: SearchParams
-}) {
-  const params = await searchParams
-  const currentPage = Math.max(1, parseInt(params.page || '1'))
-  const perPage = parseInt(params.perPage || '5')
-  const validPerPage = [5, 10, 15].includes(perPage) ? perPage : 5
-
+export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -65,41 +34,11 @@ export default async function DashboardPage({
   const sourcesWithStats = await getCompanySourcesWithStats(company.id)
 
   let hbeStats = null
-  let hbeCertificates: (HbeCertificateData & { id: string })[] = []
-  let totalPages = 1
-  let totalCount = 0
+  let initialCertificates: Awaited<ReturnType<typeof getPaginatedCertificates>> | null = null
 
   if (hbeSource) {
     hbeStats = await getHbeStats(hbeSource.id, company.id)
-
-    // Get upload IDs for this company and source
-    const { data: uploads } = await supabase
-      .from('uploads')
-      .select('id')
-      .eq('company_id', company.id)
-      .eq('source_id', hbeSource.id)
-
-    if (uploads && uploads.length > 0) {
-      const uploadIds = uploads.map(u => u.id)
-
-      const { data: allCerts, count } = await supabase
-        .from('certificates')
-        .select('id, raw_data', { count: 'exact' })
-        .eq('source_id', hbeSource.id)
-        .in('upload_id', uploadIds)
-        .order('created_at', { ascending: false })
-        .range((currentPage - 1) * validPerPage, currentPage * validPerPage - 1)
-
-      if (allCerts) {
-        hbeCertificates = allCerts.map((cert) => ({
-          id: cert.id,
-          ...(cert.raw_data as HbeCertificateData),
-        }))
-      }
-
-      totalCount = count || 0
-      totalPages = Math.ceil(totalCount / validPerPage)
-    }
+    initialCertificates = await getPaginatedCertificates(hbeSource.id, company.id, 1, 5)
   }
 
   const userInitials = company.name
@@ -264,119 +203,17 @@ export default async function DashboardPage({
                 </Box>
               </Box>
 
-              {hbeCertificates.length > 0 && (
-                <TableContainer sx={{
-                  mt: 2,
-                  '&::-webkit-scrollbar': { height: 8 },
-                  '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
-                  '&::-webkit-scrollbar-thumb': { bgcolor: 'grey.800', borderRadius: 4 },
-                  '&::-webkit-scrollbar-thumb:hover': { bgcolor: 'grey.700' },
-                }}>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certificate ID</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Type</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Energy (GJ)</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>HBEs Issued</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Double Counting</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Multiplier</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Feedstock</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>NTA8003 Code</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Delivery Date</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Booking Date</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Sector</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Supplier</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>REV Account</TableCell>
-                        <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {hbeCertificates.map((cert) => {
-                        const typeInfo = hbeTypeLabels[cert.hbe_type] || { label: cert.hbe_type, color: '#6b7280' }
-                        return (
-                          <TableRow key={cert.id}>
-                            <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                              {cert.certificate_id}
-                            </TableCell>
-                            <TableCell sx={{ borderColor: 'divider' }}>
-                              <Chip
-                                label={typeInfo.label}
-                                size="small"
-                                sx={{
-                                  bgcolor: `${typeInfo.color}20`,
-                                  color: typeInfo.color,
-                                  border: `1px solid ${typeInfo.color}40`,
-                                  fontSize: '0.7rem',
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
-                              {cert.energy_delivered_gj}
-                            </TableCell>
-                            <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
-                              {cert.hbes_issued}
-                            </TableCell>
-                            <TableCell sx={{ borderColor: 'divider' }}>
-                              <Chip
-                                label={cert.double_counting ? 'Yes' : 'No'}
-                                size="small"
-                                sx={{
-                                  bgcolor: cert.double_counting ? '#4ade8020' : '#6b728020',
-                                  color: cert.double_counting ? '#4ade80' : '#6b7280',
-                                  fontSize: '0.7rem',
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
-                              {cert.multiplier}x
-                            </TableCell>
-                            <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                              {cert.feedstock}
-                            </TableCell>
-                            <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                              {cert.nta8003_code}
-                            </TableCell>
-                            <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                              {cert.delivery_date}
-                            </TableCell>
-                            <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                              {cert.booking_date}
-                            </TableCell>
-                            <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                              {transportSectorLabels[cert.transport_sector] || cert.transport_sector}
-                            </TableCell>
-                            <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                              {cert.supplier_name}
-                            </TableCell>
-                            <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                              {cert.rev_account_id}
-                            </TableCell>
-                            <TableCell sx={{ borderColor: 'divider' }}>
-                              <Chip
-                                label={cert.verification_status}
-                                size="small"
-                                sx={{
-                                  bgcolor: cert.verification_status === 'verified' ? '#4ade8020' : '#f59e0b20',
-                                  color: cert.verification_status === 'verified' ? '#4ade80' : '#f59e0b',
-                                  fontSize: '0.7rem',
-                                }}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+              {initialCertificates && initialCertificates.certificates.length > 0 && hbeSource && (
+                <Box sx={{ mt: 2 }}>
+                  <HbeCertificatesTable
+                    sourceId={hbeSource.id}
+                    companyId={company.id}
+                    initialCertificates={initialCertificates.certificates}
+                    initialTotalCount={initialCertificates.totalCount}
+                    initialTotalPages={initialCertificates.totalPages}
+                  />
+                </Box>
               )}
-
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                perPage={validPerPage}
-                totalCount={totalCount}
-              />
             </CardContent>
           </Card>
         ) : (
