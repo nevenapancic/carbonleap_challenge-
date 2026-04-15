@@ -15,7 +15,7 @@ import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 import Chip from '@mui/material/Chip'
 import type { Source } from '@/lib/types/database'
-import { uploadHbeCertificates } from './actions'
+import { uploadHbeCertificates, uploadSafCertificates } from './actions'
 
 type Props = {
   sources: Source[]
@@ -40,7 +40,7 @@ export default function UploadForm({ sources }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!file || !selectedSource) return
+    if (!file || !selectedSource || !selectedSourceData) return
 
     setUploadState({ status: 'uploading' })
 
@@ -48,7 +48,13 @@ export default function UploadForm({ sources }: Props) {
     formData.append('file', file)
     formData.append('sourceId', selectedSource)
 
-    const result = await uploadHbeCertificates(formData)
+    // Determine which upload function to use based on source name or registry_type
+    const isSafSource = selectedSourceData.name.toLowerCase().includes('saf') ||
+                        selectedSourceData.registry_type?.toLowerCase().includes('saf')
+
+    const result = isSafSource
+      ? await uploadSafCertificates(formData)
+      : await uploadHbeCertificates(formData)
 
     if (result.success) {
       setUploadState({

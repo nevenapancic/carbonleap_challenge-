@@ -23,7 +23,7 @@ export default async function UploadPage() {
   }
 
   const sources = await getSources()
-  const hbeSource = sources.filter((s) => s.name === 'HBE')
+  const supportedSources = sources.filter((s) => s.name === 'HBE' || s.name === 'SAF')
 
   const userInitials = company.name
     .split(' ')
@@ -81,7 +81,7 @@ export default async function UploadPage() {
           </Typography>
         </Box>
 
-        <UploadForm sources={hbeSource} />
+        <UploadForm sources={supportedSources} />
       </Container>
     </Box>
   )

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyByEmail, getCompanySourcesWithStats } from '@/lib/data/companies'
 import { getHbeStats } from '@/lib/data/certificates'
+import { getSafStats } from '@/lib/data/saf'
 import { getSources } from '@/lib/data/sources'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
@@ -14,7 +15,8 @@ import Chip from '@mui/material/Chip'
 import Avatar from '@mui/material/Avatar'
 import { logout } from '../(auth)/actions'
 import HbeCertificatesTable from './HbeCertificatesTable'
-import { getPaginatedCertificates } from './actions'
+import SafCertificatesTable from './SafCertificatesTable'
+import { getPaginatedCertificates, getPaginatedSafCertificates } from './actions'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -31,6 +33,7 @@ export default async function DashboardPage() {
 
   const sources = await getSources()
   const hbeSource = sources.find((s) => s.name === 'HBE')
+  const safSource = sources.find((s) => s.name === 'SAF' || s.name.toLowerCase().includes('saf'))
   const sourcesWithStats = await getCompanySourcesWithStats(company.id)
 
   let hbeStats = null
@@ -39,6 +42,14 @@ export default async function DashboardPage() {
   if (hbeSource) {
     hbeStats = await getHbeStats(hbeSource.id, company.id)
     initialCertificates = await getPaginatedCertificates(hbeSource.id, company.id, 1, 5)
+  }
+
+  let safStats = null
+  let initialSafCertificates: Awaited<ReturnType<typeof getPaginatedSafCertificates>> | null = null
+
+  if (safSource) {
+    safStats = await getSafStats(safSource.id, company.id)
+    initialSafCertificates = await getPaginatedSafCertificates(safSource.id, company.id, 1, 5)
   }
 
   const userInitials = company.name
@@ -124,7 +135,7 @@ export default async function DashboardPage() {
           </Typography>
         </Box>
 
-        {hbeStats && hbeStats.totalCertificates > 0 ? (
+        {hbeStats && hbeStats.totalCertificates > 0 && (
           <Card sx={{ bgcolor: 'background.paper', mb: 4 }}>
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
@@ -216,7 +227,114 @@ export default async function DashboardPage() {
               )}
             </CardContent>
           </Card>
-        ) : (
+        )}
+
+        {safStats && safStats.totalCertificates > 0 && (
+          <Card sx={{ bgcolor: 'background.paper', mb: 4 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: '#60a5fa',
+                    }}
+                  />
+                  <Box>
+                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
+                      SAF
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                      Sustainable Aviation Fuel · ICAO CORSIA / EU RED
+                    </Typography>
+                  </Box>
+                </Box>
+                <Chip
+                  label="MT"
+                  sx={{
+                    bgcolor: 'transparent',
+                    border: '1px solid #60a5fa',
+                    color: '#60a5fa',
+                    fontWeight: 600,
+                  }}
+                />
+              </Box>
+
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
+                  gap: 4,
+                  py: 3,
+                  borderTop: '1px solid',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Certificates
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+                    {safStats.totalCertificates}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                    total records
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Total Volume
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+                    {safStats.totalVolumeMt.toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                    Metric Tons
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Avg GHG Reduction
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+                    {safStats.avgGhgReduction}%
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                    lifecycle reduction
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+                    CORSIA Eligible
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+                    {safStats.corsiaEligibleCount}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                    certificates
+                  </Typography>
+                </Box>
+              </Box>
+
+              {initialSafCertificates && initialSafCertificates.certificates.length > 0 && safSource && (
+                <Box sx={{ mt: 2 }}>
+                  <SafCertificatesTable
+                    sourceId={safSource.id}
+                    companyId={company.id}
+                    initialCertificates={initialSafCertificates.certificates}
+                    initialTotalCount={initialSafCertificates.totalCount}
+                    initialTotalPages={initialSafCertificates.totalPages}
+                  />
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {(!hbeStats || hbeStats.totalCertificates === 0) && (!safStats || safStats.totalCertificates === 0) && (
           <Card sx={{ bgcolor: 'background.paper' }}>
             <CardContent sx={{ textAlign: 'center', py: 6 }}>
               <Typography variant="h6" sx={{ color: 'grey.500', mb: 1 }}>

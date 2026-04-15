@@ -70,3 +70,95 @@ export type HbeCertificateData = {
   production_country: string;
   pos_number: string;
 };
+
+// SAF Certificate Types
+export type SafProductionPathway =
+  | 'HEFA'
+  | 'FT'
+  | 'ATJ'
+  | 'SIP'
+  | 'PtL'
+  | 'CHJ'
+  | 'HC-HEFA'
+  | 'Co-processing'
+  | 'Other';
+
+export type SafCertificationScheme =
+  | 'ISCC-EU'
+  | 'ISCC-CORSIA'
+  | 'ISCC-PLUS'
+  | 'RSB-CORSIA'
+  | 'RSB-EU-RED'
+  | 'RSB-Global'
+  | 'REDcert'
+  | '2BSvs'
+  | 'Other';
+
+export type SafVerificationStatus = 'verified' | 'pending' | 'under_review';
+
+export type SafCertificateStatus = 'active' | 'retired' | 'expired' | 'cancelled';
+
+export type SafChainOfCustodyType = 'mass_balance' | 'segregation' | 'book_and_claim';
+
+export type SafSustainabilityTier = 'A' | 'B' | 'C';
+
+export type SafCertificateData = {
+  // Certificate Identification
+  certificate_id: string;
+  batch_id: string | null;
+  pos_number: string;
+
+  // Volume & Quantity
+  volume_liters: number;
+  volume_mt: number;
+  energy_content_mj: number | null;
+  blend_percentage: number | null;
+
+  // GHG & Emissions Data
+  ghg_reduction_percentage: number;
+  core_lca_value: number | null;
+  lifecycle_emissions_gco2e_mj: number | null;
+
+  // Feedstock Information
+  feedstock_type: string;
+  feedstock_country: string;
+
+  // Production Pathway & Process
+  production_pathway: SafProductionPathway;
+  astm_pathway: string | null;
+
+  // Producer/Facility Information
+  producer_name: string;
+  production_facility: string | null;
+  production_country: string;
+
+  // Certification & Verification
+  certification_scheme: SafCertificationScheme;
+  certifying_body: string | null;
+  verification_status: SafVerificationStatus;
+
+  // Regulatory Compliance
+  corsia_eligible: boolean;
+  eu_red_compliant: boolean;
+
+  // Dates
+  issuance_date: string;
+  expiration_date: string | null;
+  delivery_date: string;
+
+  // Aviation/Operator Information
+  airline_name: string | null;
+  destination_airport: string | null;
+
+  // Ownership & Status
+  certificate_status: SafCertificateStatus;
+  retirement_date: string | null;
+  retirement_beneficiary: string | null;
+
+  // Chain of Custody
+  chain_of_custody_type: SafChainOfCustodyType | null;
+  supplier_name: string | null;
+
+  // Sustainability Tier
+  sustainability_tier: SafSustainabilityTier | null;
+};
