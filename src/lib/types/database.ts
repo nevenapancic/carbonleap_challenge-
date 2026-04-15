@@ -1,5 +1,3 @@
-/** @format */
-
 export type Company = {
   id: string;
   name: string;
@@ -32,14 +30,6 @@ export type Upload = {
   uploaded_at: string;
 };
 
-export type Certificate = {
-  id: string;
-  upload_id: string;
-  source_id: string;
-  raw_data: Record<string, unknown>;
-  created_at: string;
-};
-
 export type HbeType = 'HBE-G' | 'HBE-C' | 'HBE-IXB' | 'HBE-O';
 
 export type TransportSector =
@@ -67,16 +57,15 @@ export type HbeCertificateData = {
   double_counting: boolean;
   multiplier: number;
   feedstock: string;
-  nta8003_code: string; // NTA 8003 Dutch biomass classification (e.g., 572 = UCO, 131 = waste wood)
+  nta8003_code: string;
   delivery_date: string;
   booking_date: string;
   transport_sector: TransportSector;
   supplier_name: string;
   rev_account_id: string;
   verification_status: VerificationStatus;
-  // New fields based on real NEa registry requirements
-  ghg_reduction_percentage: number; // Must be ≥60% (or ≥65% for post-2021 installations)
-  sustainability_scheme: SustainabilityScheme; // EU-recognized certification scheme
-  production_country: string; // Country where biofuel was produced
-  pos_number: string; // Proof of Sustainability document number
+  ghg_reduction_percentage: number;
+  sustainability_scheme: SustainabilityScheme;
+  production_country: string;
+  pos_number: string;
 };

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { parseCSV, normalizeHeaders, transformBooleanField } from '@/lib/csv/parser'
-import { validateHbeRows } from '@/lib/validation/hbe'
+import { validateHbeRows, type HbeCertificate } from '@/lib/validation/hbe'
 
 type UploadResult = {
   success: true
@@ -14,6 +14,12 @@ type UploadResult = {
 } | {
   success: false
   error: string
+}
+
+function parseDateToISO(dateStr: string): string {
+  const parts = dateStr.split('/')
+  if (parts.length !== 3) return dateStr
+  return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
 }
 
 export async function uploadHbeCertificates(formData: FormData): Promise<UploadResult> {
@@ -83,15 +89,37 @@ export async function uploadHbeCertificates(formData: FormData): Promise<UploadR
     return { success: false, error: uploadError?.message || 'Failed to create upload record' }
   }
 
-  const validCertificates = validation.valid.map((v) => ({
-    upload_id: upload.id,
-    source_id: sourceId,
-    raw_data: v.result.success ? v.result.data : {},
-  }))
+  const validCertificates = validation.valid.map((v) => {
+    const data = v.result.success ? v.result.data as HbeCertificate : null
+    if (!data) return null
+    return {
+      upload_id: upload.id,
+      company_id: company.id,
+      source_id: sourceId,
+      certificate_id: data.certificate_id,
+      hbe_type: data.hbe_type,
+      energy_delivered_gj: data.energy_delivered_gj,
+      hbes_issued: data.hbes_issued,
+      double_counting: data.double_counting,
+      multiplier: data.multiplier,
+      feedstock: data.feedstock,
+      nta8003_code: data.nta8003_code,
+      delivery_date: parseDateToISO(data.delivery_date),
+      booking_date: parseDateToISO(data.booking_date),
+      transport_sector: data.transport_sector,
+      supplier_name: data.supplier_name,
+      rev_account_id: data.rev_account_id,
+      verification_status: data.verification_status,
+      ghg_reduction_percentage: data.ghg_reduction_percentage,
+      sustainability_scheme: data.sustainability_scheme,
+      production_country: data.production_country,
+      pos_number: data.pos_number,
+    }
+  }).filter(Boolean)
 
   if (validCertificates.length > 0) {
     const { error: certError } = await supabase
-      .from('certificates')
+      .from('hbe_certificates')
       .insert(validCertificates)
 
     if (certError) {

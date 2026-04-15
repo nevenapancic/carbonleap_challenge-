@@ -3,25 +3,22 @@ import type { HbeCertificateData } from '@/lib/types/database'
 
 export type HbeCertificateWithId = HbeCertificateData & { id: string }
 
+function formatDateForDisplay(dateStr: string): string {
+  const date = new Date(dateStr)
+  const day = date.getDate().toString().padStart(2, '0')
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
 export async function getHbeCertificates(sourceId: string, companyId: string, limit?: number): Promise<HbeCertificateWithId[]> {
   const supabase = await createClient()
 
-  // First get upload IDs for this company and source
-  const { data: uploads } = await supabase
-    .from('uploads')
-    .select('id')
+  let query = supabase
+    .from('hbe_certificates')
+    .select('*')
     .eq('company_id', companyId)
     .eq('source_id', sourceId)
-
-  if (!uploads || uploads.length === 0) return []
-
-  const uploadIds = uploads.map(u => u.id)
-
-  let query = supabase
-    .from('certificates')
-    .select('id, raw_data')
-    .eq('source_id', sourceId)
-    .in('upload_id', uploadIds)
     .order('created_at', { ascending: false })
 
   if (limit) {
@@ -34,7 +31,24 @@ export async function getHbeCertificates(sourceId: string, companyId: string, li
 
   return data.map((cert) => ({
     id: cert.id,
-    ...(cert.raw_data as HbeCertificateData),
+    certificate_id: cert.certificate_id,
+    hbe_type: cert.hbe_type,
+    energy_delivered_gj: Number(cert.energy_delivered_gj),
+    hbes_issued: cert.hbes_issued,
+    double_counting: cert.double_counting,
+    multiplier: Number(cert.multiplier),
+    feedstock: cert.feedstock,
+    nta8003_code: cert.nta8003_code,
+    delivery_date: formatDateForDisplay(cert.delivery_date),
+    booking_date: formatDateForDisplay(cert.booking_date),
+    transport_sector: cert.transport_sector,
+    supplier_name: cert.supplier_name,
+    rev_account_id: cert.rev_account_id,
+    verification_status: cert.verification_status,
+    ghg_reduction_percentage: Number(cert.ghg_reduction_percentage),
+    sustainability_scheme: cert.sustainability_scheme,
+    production_country: cert.production_country,
+    pos_number: cert.pos_number,
   }))
 }
 
@@ -45,41 +59,14 @@ export type HbeStats = {
   latestDeliveryDate: string | null
 }
 
-function parseDate(dateStr: string): Date | null {
-  const parts = dateStr.split('/')
-  if (parts.length !== 3) return null
-  return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]))
-}
-
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-}
-
 export async function getHbeStats(sourceId: string, companyId: string): Promise<HbeStats> {
   const supabase = await createClient()
 
-  const { data: uploads } = await supabase
-    .from('uploads')
-    .select('id')
+  const { data, count } = await supabase
+    .from('hbe_certificates')
+    .select('energy_delivered_gj, hbes_issued, delivery_date', { count: 'exact' })
     .eq('company_id', companyId)
     .eq('source_id', sourceId)
-
-  if (!uploads || uploads.length === 0) {
-    return {
-      totalCertificates: 0,
-      totalEnergyGj: 0,
-      totalHbesIssued: 0,
-      latestDeliveryDate: null,
-    }
-  }
-
-  const uploadIds = uploads.map(u => u.id)
-
-  const { data } = await supabase
-    .from('certificates')
-    .select('raw_data')
-    .eq('source_id', sourceId)
-    .in('upload_id', uploadIds)
 
   if (!data || data.length === 0) {
     return {
@@ -95,22 +82,21 @@ export async function getHbeStats(sourceId: string, companyId: string): Promise<
   let latestDate: Date | null = null
 
   for (const cert of data) {
-    const raw = cert.raw_data as HbeCertificateData
-    totalEnergyGj += raw.energy_delivered_gj || 0
-    totalHbesIssued += raw.hbes_issued || 0
+    totalEnergyGj += Number(cert.energy_delivered_gj) || 0
+    totalHbesIssued += cert.hbes_issued || 0
 
-    if (raw.delivery_date) {
-      const date = parseDate(raw.delivery_date)
-      if (date && (!latestDate || date > latestDate)) {
+    if (cert.delivery_date) {
+      const date = new Date(cert.delivery_date)
+      if (!latestDate || date > latestDate) {
         latestDate = date
       }
     }
   }
 
   return {
-    totalCertificates: data.length,
+    totalCertificates: count || data.length,
     totalEnergyGj: Math.round(totalEnergyGj * 10) / 10,
     totalHbesIssued: Math.round(totalHbesIssued),
-    latestDeliveryDate: latestDate ? formatDate(latestDate) : null,
+    latestDeliveryDate: latestDate ? latestDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : null,
   }
 }

@@ -47,8 +47,9 @@ export async function getCompanySourcesWithStats(companyId: string) {
       const source = cs.sources as unknown as Source
 
       const { count } = await supabase
-        .from('certificates')
+        .from('hbe_certificates')
         .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyId)
         .eq('source_id', source.id)
 
       const { data: uploads } = await supabase
@@ -90,7 +91,7 @@ export async function getCompanyUploads(companyId: string): Promise<UploadWithSo
   const uploadsWithCounts = await Promise.all(
     uploads.map(async (upload) => {
       const { count } = await supabase
-        .from('certificates')
+        .from('hbe_certificates')
         .select('*', { count: 'exact', head: true })
         .eq('upload_id', upload.id)
 
