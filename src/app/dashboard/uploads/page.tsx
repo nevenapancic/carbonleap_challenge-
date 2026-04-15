@@ -54,7 +54,7 @@ export default async function UploadsPage() {
           bgcolor: 'background.paper',
         }}
       >
-        <Container maxWidth="lg">
+        <Container maxWidth="xl">
           <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
             <Typography
               variant="h6"
@@ -83,7 +83,7 @@ export default async function UploadsPage() {
         </Container>
       </Box>
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Box>
             <Typography variant="h4" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
@@ -102,7 +102,7 @@ export default async function UploadsPage() {
                 '&:hover': { borderColor: 'grey.500' },
               }}
             >
-              + New upload
+              + Upload certificates
             </Button>
           </Link>
         </Box>

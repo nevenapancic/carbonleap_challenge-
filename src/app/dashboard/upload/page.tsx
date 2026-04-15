@@ -42,7 +42,7 @@ export default async function UploadPage() {
           bgcolor: 'background.paper',
         }}
       >
-        <Container maxWidth="lg">
+        <Container maxWidth="xl">
           <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
             <Typography
               variant="h6"
