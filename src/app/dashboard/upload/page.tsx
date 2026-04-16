@@ -23,7 +23,7 @@ export default async function UploadPage() {
   }
 
   const sources = await getSources()
-  const supportedSources = sources.filter((s) => s.name === 'HBE' || s.name === 'SAF')
+  const supportedSources = sources.filter((s) => s.name === 'HBE' || s.name === 'SAF' || s.name === 'FuelEU Maritime')
 
   const userInitials = company.name
     .split(' ')

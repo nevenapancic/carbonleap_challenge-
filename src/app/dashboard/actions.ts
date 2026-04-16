@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import type { HbeCertificateData, SafCertificateData } from '@/lib/types/database'
+import type { HbeCertificateData, SafCertificateData, FuelEuMaritimeCertificateData } from '@/lib/types/database'
 
 export type PaginatedCertificatesResult = {
   certificates: (HbeCertificateData & { id: string })[]
@@ -136,6 +136,91 @@ export async function getPaginatedSafCertificates(
     chain_of_custody_type: cert.chain_of_custody_type,
     supplier_name: cert.supplier_name,
     sustainability_tier: cert.sustainability_tier,
+  }))
+
+  const totalCount = count || 0
+  const totalPages = Math.ceil(totalCount / perPage)
+
+  return { certificates, totalCount, totalPages }
+}
+
+export type PaginatedFuelEuCertificatesResult = {
+  certificates: (FuelEuMaritimeCertificateData & { id: string })[]
+  totalCount: number
+  totalPages: number
+}
+
+export async function getPaginatedFuelEuCertificates(
+  sourceId: string,
+  companyId: string,
+  page: number,
+  perPage: number
+): Promise<PaginatedFuelEuCertificatesResult> {
+  const supabase = await createClient()
+
+  const { data: certs, count } = await supabase
+    .from('fueleu_maritime_certificates')
+    .select('*', { count: 'exact' })
+    .eq('company_id', companyId)
+    .eq('source_id', sourceId)
+    .order('created_at', { ascending: false })
+    .range((page - 1) * perPage, page * perPage - 1)
+
+  if (!certs) {
+    return { certificates: [], totalCount: 0, totalPages: 0 }
+  }
+
+  const certificates = certs.map((cert) => ({
+    id: cert.id,
+    certificate_id: cert.certificate_id,
+    reporting_period: cert.reporting_period,
+    imo_number: cert.imo_number,
+    ship_name: cert.ship_name,
+    ship_type: cert.ship_type,
+    flag_state: cert.flag_state,
+    gross_tonnage: Number(cert.gross_tonnage),
+    shipowner_company: cert.shipowner_company,
+    voyage_id: cert.voyage_id,
+    port_of_departure: cert.port_of_departure,
+    port_of_arrival: cert.port_of_arrival,
+    departure_date: formatDateForDisplay(cert.departure_date),
+    arrival_date: formatDateForDisplay(cert.arrival_date),
+    voyage_type: cert.voyage_type,
+    distance_nm: cert.distance_nm ? Number(cert.distance_nm) : null,
+    time_at_sea_hours: cert.time_at_sea_hours ? Number(cert.time_at_sea_hours) : null,
+    time_at_berth_hours: cert.time_at_berth_hours ? Number(cert.time_at_berth_hours) : null,
+    fuel_type: cert.fuel_type,
+    fuel_category: cert.fuel_category,
+    fuel_consumption_sea_mt: cert.fuel_consumption_sea_mt ? Number(cert.fuel_consumption_sea_mt) : null,
+    fuel_consumption_berth_mt: cert.fuel_consumption_berth_mt ? Number(cert.fuel_consumption_berth_mt) : null,
+    total_fuel_consumption_mt: Number(cert.total_fuel_consumption_mt),
+    lower_calorific_value_mj_kg: cert.lower_calorific_value_mj_kg ? Number(cert.lower_calorific_value_mj_kg) : null,
+    energy_consumption_mj: cert.energy_consumption_mj ? Number(cert.energy_consumption_mj) : null,
+    wtt_emission_factor: cert.wtt_emission_factor ? Number(cert.wtt_emission_factor) : null,
+    ttw_emission_factor: cert.ttw_emission_factor ? Number(cert.ttw_emission_factor) : null,
+    wtw_emission_factor: Number(cert.wtw_emission_factor),
+    ghg_intensity_gco2eq_mj: Number(cert.ghg_intensity_gco2eq_mj),
+    total_co2eq_emissions_mt: cert.total_co2eq_emissions_mt ? Number(cert.total_co2eq_emissions_mt) : null,
+    methane_slip_gch4_kwh: cert.methane_slip_gch4_kwh ? Number(cert.methane_slip_gch4_kwh) : null,
+    n2o_emissions_gn2o_kwh: cert.n2o_emissions_gn2o_kwh ? Number(cert.n2o_emissions_gn2o_kwh) : null,
+    target_ghg_intensity: Number(cert.target_ghg_intensity),
+    compliance_balance: cert.compliance_balance ? Number(cert.compliance_balance) : null,
+    compliance_status: cert.compliance_status,
+    rfnbo_subtarget_met: cert.rfnbo_subtarget_met,
+    certification_scheme: cert.certification_scheme,
+    pos_number: cert.pos_number,
+    feedstock_type: cert.feedstock_type,
+    e_value_gco2eq_mj: cert.e_value_gco2eq_mj ? Number(cert.e_value_gco2eq_mj) : null,
+    multiplier: Number(cert.multiplier) || 1.0,
+    pool_id: cert.pool_id,
+    banking_balance: cert.banking_balance ? Number(cert.banking_balance) : null,
+    borrowing_amount: cert.borrowing_amount ? Number(cert.borrowing_amount) : null,
+    ops_connected: cert.ops_connected,
+    ops_exception_applied: cert.ops_exception_applied,
+    shore_power_mwh: cert.shore_power_mwh ? Number(cert.shore_power_mwh) : null,
+    verifier_name: cert.verifier_name,
+    verification_status: cert.verification_status,
+    document_of_compliance_issued: cert.document_of_compliance_issued,
   }))
 
   const totalCount = count || 0

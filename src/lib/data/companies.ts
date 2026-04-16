@@ -90,14 +90,24 @@ export async function getCompanyUploads(companyId: string): Promise<UploadWithSo
 
   const uploadsWithCounts = await Promise.all(
     uploads.map(async (upload) => {
+      const source = upload.sources as unknown as Source
+      const sourceName = source.name.toLowerCase()
+
+      let tableName = 'hbe_certificates'
+      if (sourceName.includes('saf')) {
+        tableName = 'saf_certificates'
+      } else if (sourceName.includes('fueleu') || sourceName.includes('maritime')) {
+        tableName = 'fueleu_maritime_certificates'
+      }
+
       const { count } = await supabase
-        .from('hbe_certificates')
+        .from(tableName)
         .select('*', { count: 'exact', head: true })
         .eq('upload_id', upload.id)
 
       return {
         ...upload,
-        source: upload.sources as unknown as Source,
+        source,
         certificateCount: count || 0,
       }
     })

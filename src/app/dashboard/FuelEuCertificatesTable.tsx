@@ -14,32 +14,62 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import CircularProgress from '@mui/material/CircularProgress'
-import type { HbeCertificateData } from '@/lib/types/database'
-import { getPaginatedCertificates } from './actions'
+import type { FuelEuMaritimeCertificateData } from '@/lib/types/database'
+import { getPaginatedFuelEuCertificates } from './actions'
 
-const hbeTypeLabels: Record<string, { label: string; color: string }> = {
-  'HBE-G': { label: 'HBE-G advanced', color: '#4ade80' },
-  'HBE-C': { label: 'HBE-C', color: '#60a5fa' },
-  'HBE-IXB': { label: 'HBE-IXB', color: '#a78bfa' },
-  'HBE-O': { label: 'HBE-O', color: '#fbbf24' },
+const fuelCategoryLabels: Record<string, { label: string; color: string }> = {
+  'fossil': { label: 'Fossil', color: '#6b7280' },
+  'biofuel': { label: 'Biofuel', color: '#4ade80' },
+  'rfnbo': { label: 'RFNBO', color: '#60a5fa' },
+  'recycled_carbon_fuel': { label: 'Recycled Carbon', color: '#a78bfa' },
+  'low_carbon': { label: 'Low Carbon', color: '#34d399' },
 }
 
-const transportSectorLabels: Record<string, string> = {
-  road: 'Road',
-  maritime: 'Maritime',
-  aviation: 'Aviation',
-  inland_waterway: 'Inland Waterway',
+const fuelTypeLabels: Record<string, { label: string; color: string }> = {
+  'HFO': { label: 'HFO', color: '#6b7280' },
+  'VLSFO': { label: 'VLSFO', color: '#9ca3af' },
+  'LFO': { label: 'LFO', color: '#78716c' },
+  'MGO': { label: 'MGO', color: '#a1a1aa' },
+  'MDO': { label: 'MDO', color: '#71717a' },
+  'LNG': { label: 'LNG', color: '#60a5fa' },
+  'Methanol': { label: 'Methanol', color: '#34d399' },
+  'Ethanol': { label: 'Ethanol', color: '#4ade80' },
+  'Ammonia': { label: 'Ammonia', color: '#a78bfa' },
+  'Hydrogen': { label: 'Hydrogen', color: '#22d3ee' },
+  'Biodiesel': { label: 'Biodiesel', color: '#86efac' },
+  'Bio-LNG': { label: 'Bio-LNG', color: '#93c5fd' },
+  'Bio-Methanol': { label: 'Bio-Methanol', color: '#6ee7b7' },
+  'E-Methanol': { label: 'E-Methanol', color: '#5eead4' },
+  'E-LNG': { label: 'E-LNG', color: '#7dd3fc' },
+  'E-Ammonia': { label: 'E-Ammonia', color: '#c4b5fd' },
+  'E-Hydrogen': { label: 'E-Hydrogen', color: '#67e8f9' },
+  'Other': { label: 'Other', color: '#d4d4d8' },
+}
+
+const complianceLabels: Record<string, { label: string; color: string }> = {
+  'compliant': { label: 'Compliant', color: '#4ade80' },
+  'non_compliant': { label: 'Non-Compliant', color: '#ef4444' },
+  'pending': { label: 'Pending', color: '#f59e0b' },
+  'banked': { label: 'Banked', color: '#60a5fa' },
+  'pooled': { label: 'Pooled', color: '#a78bfa' },
+}
+
+const voyageTypeLabels: Record<string, { label: string; color: string }> = {
+  'intra_eu': { label: 'Intra-EU', color: '#60a5fa' },
+  'eu_to_third_country': { label: 'EU to Third', color: '#f59e0b' },
+  'third_country_to_eu': { label: 'Third to EU', color: '#a78bfa' },
+  'outermost_region': { label: 'Outermost', color: '#34d399' },
 }
 
 type Props = {
   sourceId: string
   companyId: string
-  initialCertificates: (HbeCertificateData & { id: string })[]
+  initialCertificates: (FuelEuMaritimeCertificateData & { id: string })[]
   initialTotalCount: number
   initialTotalPages: number
 }
 
-export default function HbeCertificatesTable({
+export default function FuelEuCertificatesTable({
   sourceId,
   companyId,
   initialCertificates,
@@ -55,7 +85,7 @@ export default function HbeCertificatesTable({
 
   const fetchPage = (page: number, itemsPerPage: number) => {
     startTransition(async () => {
-      const result = await getPaginatedCertificates(sourceId, companyId, page, itemsPerPage)
+      const result = await getPaginatedFuelEuCertificates(sourceId, companyId, page, itemsPerPage)
       setCertificates(result.certificates)
       setTotalCount(result.totalCount)
       setTotalPages(result.totalPages)
@@ -97,7 +127,7 @@ export default function HbeCertificatesTable({
             borderRadius: 1,
           }}
         >
-          <CircularProgress sx={{ color: '#4ade80' }} />
+          <CircularProgress sx={{ color: '#22d3ee' }} />
         </Box>
       )}
 
@@ -113,113 +143,106 @@ export default function HbeCertificatesTable({
           <TableHead>
             <TableRow>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certificate ID</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Type</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Energy (GJ)</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>HBEs Issued</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>GHG Reduction</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Double Counting</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Multiplier</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Feedstock</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>NTA8003</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Country</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certification</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>PoS Number</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Delivery Date</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Booking Date</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Sector</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Supplier</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>REV Account</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Status</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Ship Name</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>IMO Number</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Voyage Type</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Departure</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Arrival</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Fuel Type</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Fuel Category</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Fuel (MT)</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>GHG Intensity</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Target GHG</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Compliance</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Verification</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Period</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {certificates.map((cert) => {
-              const typeInfo = hbeTypeLabels[cert.hbe_type] || { label: cert.hbe_type, color: '#6b7280' }
+              const fuelCategoryInfo = fuelCategoryLabels[cert.fuel_category] || { label: cert.fuel_category, color: '#6b7280' }
+              const fuelTypeInfo = fuelTypeLabels[cert.fuel_type] || { label: cert.fuel_type, color: '#6b7280' }
+              const complianceInfo = complianceLabels[cert.compliance_status] || { label: cert.compliance_status, color: '#6b7280' }
+              const voyageInfo = voyageTypeLabels[cert.voyage_type] || { label: cert.voyage_type, color: '#6b7280' }
               return (
                 <TableRow key={cert.id}>
                   <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {cert.certificate_id}
                   </TableCell>
-                  <TableCell sx={{ borderColor: 'divider' }}>
-                    <Chip
-                      label={typeInfo.label}
-                      size="small"
-                      sx={{
-                        bgcolor: `${typeInfo.color}20`,
-                        color: typeInfo.color,
-                        border: `1px solid ${typeInfo.color}40`,
-                        fontSize: '0.7rem',
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
-                    {cert.energy_delivered_gj}
-                  </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
-                    {cert.hbes_issued}
-                  </TableCell>
-                  <TableCell sx={{ borderColor: 'divider' }}>
-                    <Chip
-                      label={`${cert.ghg_reduction_percentage}%`}
-                      size="small"
-                      sx={{
-                        bgcolor: cert.ghg_reduction_percentage >= 65 ? '#4ade8020' : '#f59e0b20',
-                        color: cert.ghg_reduction_percentage >= 65 ? '#4ade80' : '#f59e0b',
-                        fontSize: '0.7rem',
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ borderColor: 'divider' }}>
-                    <Chip
-                      label={cert.double_counting ? 'Yes' : 'No'}
-                      size="small"
-                      sx={{
-                        bgcolor: cert.double_counting ? '#4ade8020' : '#6b728020',
-                        color: cert.double_counting ? '#4ade80' : '#6b7280',
-                        fontSize: '0.7rem',
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
-                    {cert.multiplier}x
-                  </TableCell>
                   <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                    {cert.feedstock}
+                    {cert.ship_name}
                   </TableCell>
-                  <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                    {cert.nta8003_code}
-                  </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                    {cert.production_country}
+                  <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                    {cert.imo_number}
                   </TableCell>
                   <TableCell sx={{ borderColor: 'divider' }}>
                     <Chip
-                      label={cert.sustainability_scheme}
+                      label={voyageInfo.label}
                       size="small"
                       sx={{
-                        bgcolor: '#3b82f620',
-                        color: '#3b82f6',
+                        bgcolor: `${voyageInfo.color}20`,
+                        color: voyageInfo.color,
                         fontSize: '0.65rem',
                       }}
                     />
                   </TableCell>
-                  <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
-                    {cert.pos_number}
+                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap', fontSize: '0.8rem' }}>
+                    <Box>{cert.port_of_departure}</Box>
+                    <Box sx={{ color: 'grey.500', fontSize: '0.7rem' }}>{cert.departure_date}</Box>
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                    {cert.delivery_date}
+                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap', fontSize: '0.8rem' }}>
+                    <Box>{cert.port_of_arrival}</Box>
+                    <Box sx={{ color: 'grey.500', fontSize: '0.7rem' }}>{cert.arrival_date}</Box>
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                    {cert.booking_date}
+                  <TableCell sx={{ borderColor: 'divider' }}>
+                    <Chip
+                      label={fuelTypeInfo.label}
+                      size="small"
+                      sx={{
+                        bgcolor: `${fuelTypeInfo.color}20`,
+                        color: fuelTypeInfo.color,
+                        fontSize: '0.7rem',
+                      }}
+                    />
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                    {transportSectorLabels[cert.transport_sector] || cert.transport_sector}
+                  <TableCell sx={{ borderColor: 'divider' }}>
+                    <Chip
+                      label={fuelCategoryInfo.label}
+                      size="small"
+                      sx={{
+                        bgcolor: `${fuelCategoryInfo.color}20`,
+                        color: fuelCategoryInfo.color,
+                        fontSize: '0.7rem',
+                      }}
+                    />
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                    {cert.supplier_name}
+                  <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                    {cert.total_fuel_consumption_mt.toFixed(2)}
                   </TableCell>
-                  <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                    {cert.rev_account_id}
+                  <TableCell sx={{ borderColor: 'divider' }}>
+                    <Chip
+                      label={`${cert.ghg_intensity_gco2eq_mj.toFixed(1)}`}
+                      size="small"
+                      sx={{
+                        bgcolor: cert.ghg_intensity_gco2eq_mj <= cert.target_ghg_intensity ? '#4ade8020' : '#ef444420',
+                        color: cert.ghg_intensity_gco2eq_mj <= cert.target_ghg_intensity ? '#4ade80' : '#ef4444',
+                        fontSize: '0.7rem',
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontSize: '0.8rem' }}>
+                    {cert.target_ghg_intensity.toFixed(1)}
+                  </TableCell>
+                  <TableCell sx={{ borderColor: 'divider' }}>
+                    <Chip
+                      label={complianceInfo.label}
+                      size="small"
+                      sx={{
+                        bgcolor: `${complianceInfo.color}20`,
+                        color: complianceInfo.color,
+                        fontSize: '0.7rem',
+                      }}
+                    />
                   </TableCell>
                   <TableCell sx={{ borderColor: 'divider' }}>
                     <Chip
@@ -231,6 +254,9 @@ export default function HbeCertificatesTable({
                         fontSize: '0.7rem',
                       }}
                     />
+                  </TableCell>
+                  <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                    {cert.reporting_period}
                   </TableCell>
                 </TableRow>
               )
@@ -311,10 +337,10 @@ export default function HbeCertificatesTable({
                     disabled={isPending}
                     sx={{
                       minWidth: 36,
-                      bgcolor: page === currentPage ? '#4ade8020' : 'transparent',
-                      color: page === currentPage ? '#4ade80' : 'grey.400',
-                      border: page === currentPage ? '1px solid #4ade8040' : 'none',
-                      '&:hover': { bgcolor: '#4ade8010' },
+                      bgcolor: page === currentPage ? '#22d3ee20' : 'transparent',
+                      color: page === currentPage ? '#22d3ee' : 'grey.400',
+                      border: page === currentPage ? '1px solid #22d3ee40' : 'none',
+                      '&:hover': { bgcolor: '#22d3ee10' },
                     }}
                   >
                     {page}

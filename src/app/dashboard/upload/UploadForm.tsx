@@ -15,7 +15,7 @@ import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 import Chip from '@mui/material/Chip'
 import type { Source } from '@/lib/types/database'
-import { uploadHbeCertificates, uploadSafCertificates } from './actions'
+import { uploadHbeCertificates, uploadSafCertificates, uploadFuelEuCertificates } from './actions'
 
 type Props = {
   sources: Source[]
@@ -48,13 +48,21 @@ export default function UploadForm({ sources }: Props) {
     formData.append('file', file)
     formData.append('sourceId', selectedSource)
 
-    // Determine which upload function to use based on source name or registry_type
-    const isSafSource = selectedSourceData.name.toLowerCase().includes('saf') ||
-                        selectedSourceData.registry_type?.toLowerCase().includes('saf')
+    const sourceName = selectedSourceData.name.toLowerCase()
+    const registryType = selectedSourceData.registry_type?.toLowerCase() || ''
 
-    const result = isSafSource
-      ? await uploadSafCertificates(formData)
-      : await uploadHbeCertificates(formData)
+    const isSafSource = sourceName.includes('saf') || registryType.includes('saf')
+    const isFuelEuSource = sourceName.includes('fueleu') || registryType.includes('fueleu') ||
+                          sourceName.includes('maritime') || registryType.includes('maritime')
+
+    let result
+    if (isFuelEuSource) {
+      result = await uploadFuelEuCertificates(formData)
+    } else if (isSafSource) {
+      result = await uploadSafCertificates(formData)
+    } else {
+      result = await uploadHbeCertificates(formData)
+    }
 
     if (result.success) {
       setUploadState({
@@ -74,6 +82,8 @@ export default function UploadForm({ sources }: Props) {
       teal: '#0d9488',
       coral: '#f97316',
       amber: '#f59e0b',
+      blue: '#3b82f6',
+      cyan: '#22d3ee',
     }
     return colors[color || ''] || '#6b7280'
   }

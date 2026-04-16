@@ -331,23 +331,31 @@ export default function SafCertificatesTable({
                 &larr;
               </Button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <Button
-                  key={page}
-                  size="small"
-                  onClick={() => handlePageChange(page)}
-                  disabled={isPending}
-                  sx={{
-                    minWidth: 36,
-                    bgcolor: page === currentPage ? '#60a5fa20' : 'transparent',
-                    color: page === currentPage ? '#60a5fa' : 'grey.400',
-                    border: page === currentPage ? '1px solid #60a5fa40' : 'none',
-                    '&:hover': { bgcolor: '#60a5fa10' },
-                  }}
-                >
-                  {page}
-                </Button>
-              ))}
+              {(() => {
+                const maxVisible = 3
+                let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+                const endPage = Math.min(totalPages, startPage + maxVisible - 1)
+                if (endPage - startPage + 1 < maxVisible) {
+                  startPage = Math.max(1, endPage - maxVisible + 1)
+                }
+                return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((page) => (
+                  <Button
+                    key={page}
+                    size="small"
+                    onClick={() => handlePageChange(page)}
+                    disabled={isPending}
+                    sx={{
+                      minWidth: 36,
+                      bgcolor: page === currentPage ? '#60a5fa20' : 'transparent',
+                      color: page === currentPage ? '#60a5fa' : 'grey.400',
+                      border: page === currentPage ? '1px solid #60a5fa40' : 'none',
+                      '&:hover': { bgcolor: '#60a5fa10' },
+                    }}
+                  >
+                    {page}
+                  </Button>
+                ))
+              })()}
 
               <Button
                 size="small"

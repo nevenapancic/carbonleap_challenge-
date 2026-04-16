@@ -90,3 +90,11 @@ export function transformBooleanField(value: string): boolean {
   const trueValues = ['true', '1', 'yes', 'ja', 'y']
   return trueValues.includes(value.toLowerCase())
 }
+
+export function transformEmptyToNull(row: ParsedRow): Record<string, string | null> {
+  const result: Record<string, string | null> = {}
+  Object.entries(row).forEach(([key, value]) => {
+    result[key] = value === '' ? null : value
+  })
+  return result
+}

@@ -162,3 +162,115 @@ export type SafCertificateData = {
   // Sustainability Tier
   sustainability_tier: SafSustainabilityTier | null;
 };
+
+export type FuelEuFuelType =
+  | 'HFO'
+  | 'VLSFO'
+  | 'LFO'
+  | 'MGO'
+  | 'MDO'
+  | 'LNG'
+  | 'Methanol'
+  | 'Ethanol'
+  | 'Ammonia'
+  | 'Hydrogen'
+  | 'Biodiesel'
+  | 'Bio-LNG'
+  | 'Bio-Methanol'
+  | 'E-Methanol'
+  | 'E-LNG'
+  | 'E-Ammonia'
+  | 'E-Hydrogen'
+  | 'Other';
+
+export type FuelEuFuelCategory =
+  | 'fossil'
+  | 'biofuel'
+  | 'rfnbo'
+  | 'recycled_carbon_fuel'
+  | 'low_carbon';
+
+export type FuelEuVoyageType =
+  | 'intra_eu'
+  | 'eu_to_third_country'
+  | 'third_country_to_eu'
+  | 'outermost_region';
+
+export type FuelEuComplianceStatus =
+  | 'compliant'
+  | 'non_compliant'
+  | 'pending'
+  | 'banked'
+  | 'pooled';
+
+export type FuelEuCertificationScheme =
+  | 'ISCC-EU'
+  | 'RSB-EU-RED'
+  | 'REDcert'
+  | '2BSvs'
+  | 'KZR-INiG'
+  | 'None'
+  | 'Other';
+
+export type FuelEuVerificationStatus = 'verified' | 'pending' | 'under_review' | 'rejected';
+
+export type FuelEuMaritimeCertificateData = {
+  certificate_id: string;
+  reporting_period: number;
+
+  imo_number: string;
+  ship_name: string;
+  ship_type: string;
+  flag_state: string;
+  gross_tonnage: number;
+  shipowner_company: string;
+
+  voyage_id: string | null;
+  port_of_departure: string;
+  port_of_arrival: string;
+  departure_date: string;
+  arrival_date: string;
+  voyage_type: FuelEuVoyageType;
+  distance_nm: number | null;
+  time_at_sea_hours: number | null;
+  time_at_berth_hours: number | null;
+
+  fuel_type: FuelEuFuelType;
+  fuel_category: FuelEuFuelCategory;
+  fuel_consumption_sea_mt: number | null;
+  fuel_consumption_berth_mt: number | null;
+  total_fuel_consumption_mt: number;
+  lower_calorific_value_mj_kg: number | null;
+  energy_consumption_mj: number | null;
+
+  wtt_emission_factor: number | null;
+  ttw_emission_factor: number | null;
+  wtw_emission_factor: number;
+  ghg_intensity_gco2eq_mj: number;
+  total_co2eq_emissions_mt: number | null;
+  methane_slip_gch4_kwh: number | null;
+  n2o_emissions_gn2o_kwh: number | null;
+
+  target_ghg_intensity: number;
+  compliance_balance: number | null;
+  compliance_status: FuelEuComplianceStatus;
+  rfnbo_subtarget_met: boolean;
+
+  certification_scheme: FuelEuCertificationScheme | null;
+  pos_number: string | null;
+  feedstock_type: string | null;
+  e_value_gco2eq_mj: number | null;
+  multiplier: number;
+
+  pool_id: string | null;
+  banking_balance: number | null;
+  borrowing_amount: number | null;
+
+  ops_connected: boolean;
+  ops_exception_applied: boolean;
+  shore_power_mwh: number | null;
+
+  verifier_name: string | null;
+  verification_status: FuelEuVerificationStatus;
+  document_of_compliance_issued: boolean;
+};
