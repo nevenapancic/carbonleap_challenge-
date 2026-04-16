@@ -228,3 +228,103 @@ export async function getPaginatedFuelEuCertificates(
 
   return { certificates, totalCount, totalPages }
 }
+
+type DeleteResult = {
+  success: boolean
+  error?: string
+}
+
+type UpdateResult = {
+  success: boolean
+  error?: string
+}
+
+export async function deleteHbeCertificate(id: string): Promise<DeleteResult> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('hbe_certificates')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function updateHbeCertificate(id: string, data: Partial<HbeCertificateData>): Promise<UpdateResult> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('hbe_certificates')
+    .update(data)
+    .eq('id', id)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function deleteSafCertificate(id: string): Promise<DeleteResult> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('saf_certificates')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function updateSafCertificate(id: string, data: Partial<SafCertificateData>): Promise<UpdateResult> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('saf_certificates')
+    .update(data)
+    .eq('id', id)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function deleteFuelEuCertificate(id: string): Promise<DeleteResult> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('fueleu_maritime_certificates')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function updateFuelEuCertificate(id: string, data: Partial<FuelEuMaritimeCertificateData>): Promise<UpdateResult> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('fueleu_maritime_certificates')
+    .update(data)
+    .eq('id', id)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}

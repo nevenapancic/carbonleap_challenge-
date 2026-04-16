@@ -14,8 +14,13 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import CircularProgress from '@mui/material/CircularProgress'
+import IconButton from '@mui/material/IconButton'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
 import type { FuelEuMaritimeCertificateData } from '@/lib/types/database'
-import { getPaginatedFuelEuCertificates } from './actions'
+import { getPaginatedFuelEuCertificates, deleteFuelEuCertificate, updateFuelEuCertificate } from './actions'
+import DeleteConfirmationDialog from './DeleteConfirmationDialog'
+import EditFuelEuCertificateModal from './EditFuelEuCertificateModal'
 
 const fuelCategoryLabels: Record<string, { label: string; color: string }> = {
   'fossil': { label: 'Fossil', color: '#6b7280' },
@@ -83,6 +88,12 @@ export default function FuelEuCertificatesTable({
   const [totalPages, setTotalPages] = useState(initialTotalPages)
   const [isPending, startTransition] = useTransition()
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [selectedCertificate, setSelectedCertificate] = useState<(FuelEuMaritimeCertificateData & { id: string }) | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
   const fetchPage = (page: number, itemsPerPage: number) => {
     startTransition(async () => {
       const result = await getPaginatedFuelEuCertificates(sourceId, companyId, page, itemsPerPage)
@@ -100,6 +111,40 @@ export default function FuelEuCertificatesTable({
 
   const handlePerPageChange = (newPerPage: number) => {
     fetchPage(1, newPerPage)
+  }
+
+  const handleEditClick = (cert: FuelEuMaritimeCertificateData & { id: string }) => {
+    setSelectedCertificate(cert)
+    setEditModalOpen(true)
+  }
+
+  const handleDeleteClick = (cert: FuelEuMaritimeCertificateData & { id: string }) => {
+    setSelectedCertificate(cert)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedCertificate) return
+    setIsDeleting(true)
+    const result = await deleteFuelEuCertificate(selectedCertificate.id)
+    setIsDeleting(false)
+    if (result.success) {
+      setDeleteDialogOpen(false)
+      setSelectedCertificate(null)
+      fetchPage(currentPage, perPage)
+    }
+  }
+
+  const handleSave = async (data: Partial<FuelEuMaritimeCertificateData>) => {
+    if (!selectedCertificate) return
+    setIsSaving(true)
+    const result = await updateFuelEuCertificate(selectedCertificate.id, data)
+    setIsSaving(false)
+    if (result.success) {
+      setEditModalOpen(false)
+      setSelectedCertificate(null)
+      fetchPage(currentPage, perPage)
+    }
   }
 
   if (certificates.length === 0 && !isPending) {
@@ -142,6 +187,7 @@ export default function FuelEuCertificatesTable({
         <Table size="small">
           <TableHead>
             <TableRow>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap', width: 80 }}>Actions</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certificate ID</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Ship Name</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>IMO Number</TableCell>
@@ -166,6 +212,22 @@ export default function FuelEuCertificatesTable({
               const voyageInfo = voyageTypeLabels[cert.voyage_type] || { label: cert.voyage_type, color: '#6b7280' }
               return (
                 <TableRow key={cert.id}>
+                  <TableCell sx={{ borderColor: 'divider', whiteSpace: 'nowrap' }}>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEditClick(cert)}
+                      sx={{ color: '#22d3ee', '&:hover': { bgcolor: '#22d3ee20' } }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteClick(cert)}
+                      sx={{ color: '#ef4444', '&:hover': { bgcolor: '#ef444420' } }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
                   <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {cert.certificate_id}
                   </TableCell>
@@ -363,6 +425,30 @@ export default function FuelEuCertificatesTable({
             </Box>
           </Box>
         </Box>
+      )}
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false)
+          setSelectedCertificate(null)
+        }}
+        onConfirm={handleDeleteConfirm}
+        certificateId={selectedCertificate?.certificate_id || ''}
+        isDeleting={isDeleting}
+      />
+
+      {selectedCertificate && (
+        <EditFuelEuCertificateModal
+          open={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false)
+            setSelectedCertificate(null)
+          }}
+          onSave={handleSave}
+          certificate={selectedCertificate}
+          isSaving={isSaving}
+        />
       )}
     </Box>
   )

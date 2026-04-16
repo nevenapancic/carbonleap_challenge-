@@ -14,8 +14,13 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import CircularProgress from '@mui/material/CircularProgress'
+import IconButton from '@mui/material/IconButton'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
 import type { HbeCertificateData } from '@/lib/types/database'
-import { getPaginatedCertificates } from './actions'
+import { getPaginatedCertificates, deleteHbeCertificate, updateHbeCertificate } from './actions'
+import DeleteConfirmationDialog from './DeleteConfirmationDialog'
+import EditHbeCertificateModal from './EditHbeCertificateModal'
 
 const hbeTypeLabels: Record<string, { label: string; color: string }> = {
   'HBE-G': { label: 'HBE-G advanced', color: '#4ade80' },
@@ -53,6 +58,12 @@ export default function HbeCertificatesTable({
   const [totalPages, setTotalPages] = useState(initialTotalPages)
   const [isPending, startTransition] = useTransition()
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [selectedCertificate, setSelectedCertificate] = useState<(HbeCertificateData & { id: string }) | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
   const fetchPage = (page: number, itemsPerPage: number) => {
     startTransition(async () => {
       const result = await getPaginatedCertificates(sourceId, companyId, page, itemsPerPage)
@@ -70,6 +81,40 @@ export default function HbeCertificatesTable({
 
   const handlePerPageChange = (newPerPage: number) => {
     fetchPage(1, newPerPage)
+  }
+
+  const handleEditClick = (cert: HbeCertificateData & { id: string }) => {
+    setSelectedCertificate(cert)
+    setEditModalOpen(true)
+  }
+
+  const handleDeleteClick = (cert: HbeCertificateData & { id: string }) => {
+    setSelectedCertificate(cert)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedCertificate) return
+    setIsDeleting(true)
+    const result = await deleteHbeCertificate(selectedCertificate.id)
+    setIsDeleting(false)
+    if (result.success) {
+      setDeleteDialogOpen(false)
+      setSelectedCertificate(null)
+      fetchPage(currentPage, perPage)
+    }
+  }
+
+  const handleSave = async (data: Partial<HbeCertificateData>) => {
+    if (!selectedCertificate) return
+    setIsSaving(true)
+    const result = await updateHbeCertificate(selectedCertificate.id, data)
+    setIsSaving(false)
+    if (result.success) {
+      setEditModalOpen(false)
+      setSelectedCertificate(null)
+      fetchPage(currentPage, perPage)
+    }
   }
 
   if (certificates.length === 0 && !isPending) {
@@ -112,6 +157,7 @@ export default function HbeCertificatesTable({
         <Table size="small">
           <TableHead>
             <TableRow>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap', width: 80 }}>Actions</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certificate ID</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Type</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Energy (GJ)</TableCell>
@@ -137,6 +183,22 @@ export default function HbeCertificatesTable({
               const typeInfo = hbeTypeLabels[cert.hbe_type] || { label: cert.hbe_type, color: '#6b7280' }
               return (
                 <TableRow key={cert.id}>
+                  <TableCell sx={{ borderColor: 'divider', whiteSpace: 'nowrap' }}>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEditClick(cert)}
+                      sx={{ color: '#4ade80', '&:hover': { bgcolor: '#4ade8020' } }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteClick(cert)}
+                      sx={{ color: '#ef4444', '&:hover': { bgcolor: '#ef444420' } }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
                   <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {cert.certificate_id}
                   </TableCell>
@@ -337,6 +399,30 @@ export default function HbeCertificatesTable({
             </Box>
           </Box>
         </Box>
+      )}
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false)
+          setSelectedCertificate(null)
+        }}
+        onConfirm={handleDeleteConfirm}
+        certificateId={selectedCertificate?.certificate_id || ''}
+        isDeleting={isDeleting}
+      />
+
+      {selectedCertificate && (
+        <EditHbeCertificateModal
+          open={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false)
+            setSelectedCertificate(null)
+          }}
+          onSave={handleSave}
+          certificate={selectedCertificate}
+          isSaving={isSaving}
+        />
       )}
     </Box>
   )

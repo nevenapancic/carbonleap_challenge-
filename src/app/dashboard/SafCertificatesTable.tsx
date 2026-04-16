@@ -14,8 +14,13 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import CircularProgress from '@mui/material/CircularProgress'
+import IconButton from '@mui/material/IconButton'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
 import type { SafCertificateData } from '@/lib/types/database'
-import { getPaginatedSafCertificates } from './actions'
+import { getPaginatedSafCertificates, deleteSafCertificate, updateSafCertificate } from './actions'
+import DeleteConfirmationDialog from './DeleteConfirmationDialog'
+import EditSafCertificateModal from './EditSafCertificateModal'
 
 const pathwayLabels: Record<string, { label: string; color: string }> = {
   'HEFA': { label: 'HEFA', color: '#4ade80' },
@@ -70,6 +75,12 @@ export default function SafCertificatesTable({
   const [totalPages, setTotalPages] = useState(initialTotalPages)
   const [isPending, startTransition] = useTransition()
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [selectedCertificate, setSelectedCertificate] = useState<(SafCertificateData & { id: string }) | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
   const fetchPage = (page: number, itemsPerPage: number) => {
     startTransition(async () => {
       const result = await getPaginatedSafCertificates(sourceId, companyId, page, itemsPerPage)
@@ -87,6 +98,40 @@ export default function SafCertificatesTable({
 
   const handlePerPageChange = (newPerPage: number) => {
     fetchPage(1, newPerPage)
+  }
+
+  const handleEditClick = (cert: SafCertificateData & { id: string }) => {
+    setSelectedCertificate(cert)
+    setEditModalOpen(true)
+  }
+
+  const handleDeleteClick = (cert: SafCertificateData & { id: string }) => {
+    setSelectedCertificate(cert)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedCertificate) return
+    setIsDeleting(true)
+    const result = await deleteSafCertificate(selectedCertificate.id)
+    setIsDeleting(false)
+    if (result.success) {
+      setDeleteDialogOpen(false)
+      setSelectedCertificate(null)
+      fetchPage(currentPage, perPage)
+    }
+  }
+
+  const handleSave = async (data: Partial<SafCertificateData>) => {
+    if (!selectedCertificate) return
+    setIsSaving(true)
+    const result = await updateSafCertificate(selectedCertificate.id, data)
+    setIsSaving(false)
+    if (result.success) {
+      setEditModalOpen(false)
+      setSelectedCertificate(null)
+      fetchPage(currentPage, perPage)
+    }
   }
 
   if (certificates.length === 0 && !isPending) {
@@ -129,6 +174,7 @@ export default function SafCertificatesTable({
         <Table size="small">
           <TableHead>
             <TableRow>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap', width: 80 }}>Actions</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certificate ID</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Pathway</TableCell>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Volume (MT)</TableCell>
@@ -156,6 +202,22 @@ export default function SafCertificatesTable({
               const statusInfo = statusLabels[cert.certificate_status] || { label: cert.certificate_status, color: '#6b7280' }
               return (
                 <TableRow key={cert.id}>
+                  <TableCell sx={{ borderColor: 'divider', whiteSpace: 'nowrap' }}>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEditClick(cert)}
+                      sx={{ color: '#60a5fa', '&:hover': { bgcolor: '#60a5fa20' } }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteClick(cert)}
+                      sx={{ color: '#ef4444', '&:hover': { bgcolor: '#ef444420' } }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
                   <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {cert.certificate_id}
                   </TableCell>
@@ -372,6 +434,30 @@ export default function SafCertificatesTable({
             </Box>
           </Box>
         </Box>
+      )}
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false)
+          setSelectedCertificate(null)
+        }}
+        onConfirm={handleDeleteConfirm}
+        certificateId={selectedCertificate?.certificate_id || ''}
+        isDeleting={isDeleting}
+      />
+
+      {selectedCertificate && (
+        <EditSafCertificateModal
+          open={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false)
+            setSelectedCertificate(null)
+          }}
+          onSave={handleSave}
+          certificate={selectedCertificate}
+          isSaving={isSaving}
+        />
       )}
     </Box>
   )
