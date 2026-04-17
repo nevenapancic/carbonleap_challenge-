@@ -2,10 +2,52 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { parseCSV, normalizeHeaders, transformBooleanField, transformEmptyToNull } from '@/lib/csv/parser'
+import {
+  parseCSV,
+  parseJSON,
+  parseExcel,
+  detectFileFormat,
+  normalizeHeaders,
+  transformBooleanField,
+  transformEmptyToNull,
+  type ParseResult,
+} from '@/lib/parsers/fileParser'
 import { validateHbeRows, type HbeCertificate } from '@/lib/validation/hbe'
 import { validateSafRows, type SafCertificate } from '@/lib/validation/saf'
 import { validateFuelEuRows, type FuelEuMaritimeCertificate } from '@/lib/validation/fueleu'
+
+async function parseFileContent(file: File): Promise<ParseResult> {
+  const format = detectFileFormat(file.name)
+
+  if (format === 'unknown') {
+    return { success: false, error: 'Unsupported file format. Please upload CSV, JSON, or Excel files.' }
+  }
+
+  if (format === 'csv') {
+    const content = await file.text()
+    return parseCSV(content)
+  } else if (format === 'json') {
+    const content = await file.text()
+    return parseJSON(content)
+  } else {
+    const buffer = await file.arrayBuffer()
+    return parseExcel(buffer)
+  }
+}
+
+function getContentType(filename: string): string {
+  const format = detectFileFormat(filename)
+  switch (format) {
+    case 'csv':
+      return 'text/csv'
+    case 'json':
+      return 'application/json'
+    case 'xlsx':
+      return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    default:
+      return 'application/octet-stream'
+  }
+}
 
 type UploadResult = {
   success: true
@@ -59,8 +101,7 @@ export async function uploadHbeCertificates(formData: FormData): Promise<UploadR
       { onConflict: 'company_id,source_id' }
     )
 
-  const content = await file.text()
-  const parseResult = parseCSV(content)
+  const parseResult = await parseFileContent(file)
 
   if (!parseResult.success) {
     return { success: false, error: parseResult.error }
@@ -83,7 +124,7 @@ export async function uploadHbeCertificates(formData: FormData): Promise<UploadR
   const { error: storageError } = await supabase.storage
     .from('certificates')
     .upload(filePath, fileBuffer, {
-      contentType: 'text/csv',
+      contentType: getContentType(file.name),
       upsert: false,
     })
 
@@ -201,8 +242,7 @@ export async function uploadSafCertificates(formData: FormData): Promise<UploadR
       { onConflict: 'company_id,source_id' }
     )
 
-  const content = await file.text()
-  const parseResult = parseCSV(content)
+  const parseResult = await parseFileContent(file)
 
   if (!parseResult.success) {
     return { success: false, error: parseResult.error }
@@ -228,7 +268,7 @@ export async function uploadSafCertificates(formData: FormData): Promise<UploadR
   const { error: storageError } = await supabase.storage
     .from('certificates')
     .upload(filePath, fileBuffer, {
-      contentType: 'text/csv',
+      contentType: getContentType(file.name),
       upsert: false,
     })
 
@@ -361,8 +401,7 @@ export async function uploadFuelEuCertificates(formData: FormData): Promise<Uplo
       { onConflict: 'company_id,source_id' }
     )
 
-  const content = await file.text()
-  const parseResult = parseCSV(content)
+  const parseResult = await parseFileContent(file)
 
   if (!parseResult.success) {
     return { success: false, error: parseResult.error }
@@ -394,7 +433,7 @@ export async function uploadFuelEuCertificates(formData: FormData): Promise<Uplo
   const { error: storageError } = await supabase.storage
     .from('certificates')
     .upload(filePath, fileBuffer, {
-      contentType: 'text/csv',
+      contentType: getContentType(file.name),
       upsert: false,
     })
 
