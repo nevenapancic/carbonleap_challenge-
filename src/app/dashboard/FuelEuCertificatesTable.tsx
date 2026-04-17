@@ -17,6 +17,8 @@ import CircularProgress from '@mui/material/CircularProgress'
 import IconButton from '@mui/material/IconButton'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
 import type { FuelEuMaritimeCertificateData } from '@/lib/types/database'
 import { getPaginatedFuelEuCertificates, deleteFuelEuCertificate, updateFuelEuCertificate } from './actions'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
@@ -93,10 +95,55 @@ export default function FuelEuCertificatesTable({
   const [selectedCertificate, setSelectedCertificate] = useState<(FuelEuMaritimeCertificateData & { id: string }) | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
-  const fetchPage = (page: number, itemsPerPage: number) => {
+  const handleSort = (column: string) => {
+    const newDirection = sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc'
+    setSortColumn(column)
+    setSortDirection(newDirection)
+    fetchPage(1, perPage, column, newDirection)
+  }
+
+  const SortableHeader = ({ column, label }: { column: string; label: string }) => (
+    <TableCell
+      sx={{
+        color: 'grey.500',
+        borderColor: 'divider',
+        whiteSpace: 'nowrap',
+        cursor: 'pointer',
+        userSelect: 'none',
+        '&:hover': { color: 'grey.300' },
+      }}
+      onClick={() => handleSort(column)}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        {label}
+        <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
+          <ArrowUpwardIcon
+            sx={{
+              fontSize: 12,
+              color: sortColumn === column && sortDirection === 'asc' ? '#22d3ee' : 'grey.700',
+              mb: -0.5,
+            }}
+          />
+          <ArrowDownwardIcon
+            sx={{
+              fontSize: 12,
+              color: sortColumn === column && sortDirection === 'desc' ? '#22d3ee' : 'grey.700',
+              mt: -0.5,
+            }}
+          />
+        </Box>
+      </Box>
+    </TableCell>
+  )
+
+  const fetchPage = (page: number, itemsPerPage: number, sortCol?: string | null, sortDir?: 'asc' | 'desc') => {
+    const col = sortCol !== undefined ? sortCol : sortColumn
+    const dir = sortDir !== undefined ? sortDir : sortDirection
     startTransition(async () => {
-      const result = await getPaginatedFuelEuCertificates(sourceId, companyId, page, itemsPerPage)
+      const result = await getPaginatedFuelEuCertificates(sourceId, companyId, page, itemsPerPage, col, dir)
       setCertificates(result.certificates)
       setTotalCount(result.totalCount)
       setTotalPages(result.totalPages)
@@ -188,20 +235,20 @@ export default function FuelEuCertificatesTable({
           <TableHead>
             <TableRow>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap', width: 80 }}>Actions</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certificate ID</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Ship Name</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>IMO Number</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Voyage Type</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Departure</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Arrival</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Fuel Type</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Fuel Category</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Fuel (MT)</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>GHG Intensity</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Target GHG</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Compliance</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Verification</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Period</TableCell>
+              <SortableHeader column="certificate_id" label="Certificate ID" />
+              <SortableHeader column="ship_name" label="Ship Name" />
+              <SortableHeader column="imo_number" label="IMO Number" />
+              <SortableHeader column="voyage_type" label="Voyage Type" />
+              <SortableHeader column="departure_date" label="Departure" />
+              <SortableHeader column="arrival_date" label="Arrival" />
+              <SortableHeader column="fuel_type" label="Fuel Type" />
+              <SortableHeader column="fuel_category" label="Fuel Category" />
+              <SortableHeader column="total_fuel_consumption_mt" label="Fuel (MT)" />
+              <SortableHeader column="ghg_intensity_gco2eq_mj" label="GHG Intensity" />
+              <SortableHeader column="target_ghg_intensity" label="Target GHG" />
+              <SortableHeader column="compliance_status" label="Compliance" />
+              <SortableHeader column="verification_status" label="Verification" />
+              <SortableHeader column="reporting_period" label="Period" />
             </TableRow>
           </TableHead>
           <TableBody>

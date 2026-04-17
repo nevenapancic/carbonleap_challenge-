@@ -17,6 +17,8 @@ import CircularProgress from '@mui/material/CircularProgress'
 import IconButton from '@mui/material/IconButton'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
 import type { HbeCertificateData } from '@/lib/types/database'
 import { getPaginatedCertificates, deleteHbeCertificate, updateHbeCertificate } from './actions'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
@@ -63,10 +65,55 @@ export default function HbeCertificatesTable({
   const [selectedCertificate, setSelectedCertificate] = useState<(HbeCertificateData & { id: string }) | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
-  const fetchPage = (page: number, itemsPerPage: number) => {
+  const handleSort = (column: string) => {
+    const newDirection = sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc'
+    setSortColumn(column)
+    setSortDirection(newDirection)
+    fetchPage(1, perPage, column, newDirection)
+  }
+
+  const SortableHeader = ({ column, label }: { column: string; label: string }) => (
+    <TableCell
+      sx={{
+        color: 'grey.500',
+        borderColor: 'divider',
+        whiteSpace: 'nowrap',
+        cursor: 'pointer',
+        userSelect: 'none',
+        '&:hover': { color: 'grey.300' },
+      }}
+      onClick={() => handleSort(column)}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        {label}
+        <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
+          <ArrowUpwardIcon
+            sx={{
+              fontSize: 12,
+              color: sortColumn === column && sortDirection === 'asc' ? '#4ade80' : 'grey.700',
+              mb: -0.5,
+            }}
+          />
+          <ArrowDownwardIcon
+            sx={{
+              fontSize: 12,
+              color: sortColumn === column && sortDirection === 'desc' ? '#4ade80' : 'grey.700',
+              mt: -0.5,
+            }}
+          />
+        </Box>
+      </Box>
+    </TableCell>
+  )
+
+  const fetchPage = (page: number, itemsPerPage: number, sortCol?: string | null, sortDir?: 'asc' | 'desc') => {
+    const col = sortCol !== undefined ? sortCol : sortColumn
+    const dir = sortDir !== undefined ? sortDir : sortDirection
     startTransition(async () => {
-      const result = await getPaginatedCertificates(sourceId, companyId, page, itemsPerPage)
+      const result = await getPaginatedCertificates(sourceId, companyId, page, itemsPerPage, col, dir)
       setCertificates(result.certificates)
       setTotalCount(result.totalCount)
       setTotalPages(result.totalPages)
@@ -158,24 +205,24 @@ export default function HbeCertificatesTable({
           <TableHead>
             <TableRow>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap', width: 80 }}>Actions</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certificate ID</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Type</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Energy (GJ)</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>HBEs Issued</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>GHG Reduction</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Double Counting</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Multiplier</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Feedstock</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>NTA8003</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Country</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certification</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>PoS Number</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Delivery Date</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Booking Date</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Sector</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Supplier</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>REV Account</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Status</TableCell>
+              <SortableHeader column="certificate_id" label="Certificate ID" />
+              <SortableHeader column="hbe_type" label="Type" />
+              <SortableHeader column="energy_delivered_gj" label="Energy (GJ)" />
+              <SortableHeader column="hbes_issued" label="HBEs Issued" />
+              <SortableHeader column="ghg_reduction_percentage" label="GHG Reduction" />
+              <SortableHeader column="double_counting" label="Double Counting" />
+              <SortableHeader column="multiplier" label="Multiplier" />
+              <SortableHeader column="feedstock" label="Feedstock" />
+              <SortableHeader column="nta8003_code" label="NTA8003" />
+              <SortableHeader column="production_country" label="Country" />
+              <SortableHeader column="sustainability_scheme" label="Certification" />
+              <SortableHeader column="pos_number" label="PoS Number" />
+              <SortableHeader column="delivery_date" label="Delivery Date" />
+              <SortableHeader column="booking_date" label="Booking Date" />
+              <SortableHeader column="transport_sector" label="Sector" />
+              <SortableHeader column="supplier_name" label="Supplier" />
+              <SortableHeader column="rev_account_id" label="REV Account" />
+              <SortableHeader column="verification_status" label="Status" />
             </TableRow>
           </TableHead>
           <TableBody>

@@ -21,17 +21,25 @@ export async function getPaginatedCertificates(
   sourceId: string,
   companyId: string,
   page: number,
-  perPage: number
+  perPage: number,
+  sortColumn?: string | null,
+  sortDirection?: 'asc' | 'desc'
 ): Promise<PaginatedCertificatesResult> {
   const supabase = await createClient()
 
-  const { data: certs, count } = await supabase
+  let query = supabase
     .from('hbe_certificates')
     .select('*', { count: 'exact' })
     .eq('company_id', companyId)
     .eq('source_id', sourceId)
-    .order('created_at', { ascending: false })
-    .range((page - 1) * perPage, page * perPage - 1)
+
+  if (sortColumn) {
+    query = query.order(sortColumn, { ascending: sortDirection === 'asc' })
+  } else {
+    query = query.order('created_at', { ascending: false })
+  }
+
+  const { data: certs, count } = await query.range((page - 1) * perPage, page * perPage - 1)
 
   if (!certs) {
     return { certificates: [], totalCount: 0, totalPages: 0 }
@@ -85,17 +93,25 @@ export async function getPaginatedSafCertificates(
   sourceId: string,
   companyId: string,
   page: number,
-  perPage: number
+  perPage: number,
+  sortColumn?: string | null,
+  sortDirection?: 'asc' | 'desc'
 ): Promise<PaginatedSafCertificatesResult> {
   const supabase = await createClient()
 
-  const { data: certs, count } = await supabase
+  let query = supabase
     .from('saf_certificates')
     .select('*', { count: 'exact' })
     .eq('company_id', companyId)
     .eq('source_id', sourceId)
-    .order('created_at', { ascending: false })
-    .range((page - 1) * perPage, page * perPage - 1)
+
+  if (sortColumn) {
+    query = query.order(sortColumn, { ascending: sortDirection === 'asc' })
+  } else {
+    query = query.order('created_at', { ascending: false })
+  }
+
+  const { data: certs, count } = await query.range((page - 1) * perPage, page * perPage - 1)
 
   if (!certs) {
     return { certificates: [], totalCount: 0, totalPages: 0 }
@@ -154,17 +170,25 @@ export async function getPaginatedFuelEuCertificates(
   sourceId: string,
   companyId: string,
   page: number,
-  perPage: number
+  perPage: number,
+  sortColumn?: string | null,
+  sortDirection?: 'asc' | 'desc'
 ): Promise<PaginatedFuelEuCertificatesResult> {
   const supabase = await createClient()
 
-  const { data: certs, count } = await supabase
+  let query = supabase
     .from('fueleu_maritime_certificates')
     .select('*', { count: 'exact' })
     .eq('company_id', companyId)
     .eq('source_id', sourceId)
-    .order('created_at', { ascending: false })
-    .range((page - 1) * perPage, page * perPage - 1)
+
+  if (sortColumn) {
+    query = query.order(sortColumn, { ascending: sortDirection === 'asc' })
+  } else {
+    query = query.order('created_at', { ascending: false })
+  }
+
+  const { data: certs, count } = await query.range((page - 1) * perPage, page * perPage - 1)
 
   if (!certs) {
     return { certificates: [], totalCount: 0, totalPages: 0 }

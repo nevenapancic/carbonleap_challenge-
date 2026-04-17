@@ -17,6 +17,8 @@ import CircularProgress from '@mui/material/CircularProgress'
 import IconButton from '@mui/material/IconButton'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
 import type { SafCertificateData } from '@/lib/types/database'
 import { getPaginatedSafCertificates, deleteSafCertificate, updateSafCertificate } from './actions'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
@@ -80,10 +82,55 @@ export default function SafCertificatesTable({
   const [selectedCertificate, setSelectedCertificate] = useState<(SafCertificateData & { id: string }) | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
-  const fetchPage = (page: number, itemsPerPage: number) => {
+  const handleSort = (column: string) => {
+    const newDirection = sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc'
+    setSortColumn(column)
+    setSortDirection(newDirection)
+    fetchPage(1, perPage, column, newDirection)
+  }
+
+  const SortableHeader = ({ column, label }: { column: string; label: string }) => (
+    <TableCell
+      sx={{
+        color: 'grey.500',
+        borderColor: 'divider',
+        whiteSpace: 'nowrap',
+        cursor: 'pointer',
+        userSelect: 'none',
+        '&:hover': { color: 'grey.300' },
+      }}
+      onClick={() => handleSort(column)}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        {label}
+        <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
+          <ArrowUpwardIcon
+            sx={{
+              fontSize: 12,
+              color: sortColumn === column && sortDirection === 'asc' ? '#60a5fa' : 'grey.700',
+              mb: -0.5,
+            }}
+          />
+          <ArrowDownwardIcon
+            sx={{
+              fontSize: 12,
+              color: sortColumn === column && sortDirection === 'desc' ? '#60a5fa' : 'grey.700',
+              mt: -0.5,
+            }}
+          />
+        </Box>
+      </Box>
+    </TableCell>
+  )
+
+  const fetchPage = (page: number, itemsPerPage: number, sortCol?: string | null, sortDir?: 'asc' | 'desc') => {
+    const col = sortCol !== undefined ? sortCol : sortColumn
+    const dir = sortDir !== undefined ? sortDir : sortDirection
     startTransition(async () => {
-      const result = await getPaginatedSafCertificates(sourceId, companyId, page, itemsPerPage)
+      const result = await getPaginatedSafCertificates(sourceId, companyId, page, itemsPerPage, col, dir)
       setCertificates(result.certificates)
       setTotalCount(result.totalCount)
       setTotalPages(result.totalPages)
@@ -175,24 +222,24 @@ export default function SafCertificatesTable({
           <TableHead>
             <TableRow>
               <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap', width: 80 }}>Actions</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certificate ID</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Pathway</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Volume (MT)</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Volume (L)</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>GHG Reduction</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Feedstock</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Feedstock Country</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Producer</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Production Country</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Certification</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>CORSIA</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>EU RED</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>PoS Number</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Issuance Date</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Delivery Date</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Airline</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Status</TableCell>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap' }}>Verification</TableCell>
+              <SortableHeader column="certificate_id" label="Certificate ID" />
+              <SortableHeader column="production_pathway" label="Pathway" />
+              <SortableHeader column="volume_mt" label="Volume (MT)" />
+              <SortableHeader column="volume_liters" label="Volume (L)" />
+              <SortableHeader column="ghg_reduction_percentage" label="GHG Reduction" />
+              <SortableHeader column="feedstock_type" label="Feedstock" />
+              <SortableHeader column="feedstock_country" label="Feedstock Country" />
+              <SortableHeader column="producer_name" label="Producer" />
+              <SortableHeader column="production_country" label="Production Country" />
+              <SortableHeader column="certification_scheme" label="Certification" />
+              <SortableHeader column="corsia_eligible" label="CORSIA" />
+              <SortableHeader column="eu_red_compliant" label="EU RED" />
+              <SortableHeader column="pos_number" label="PoS Number" />
+              <SortableHeader column="issuance_date" label="Issuance Date" />
+              <SortableHeader column="delivery_date" label="Delivery Date" />
+              <SortableHeader column="airline_name" label="Airline" />
+              <SortableHeader column="certificate_status" label="Status" />
+              <SortableHeader column="verification_status" label="Verification" />
             </TableRow>
           </TableHead>
           <TableBody>
