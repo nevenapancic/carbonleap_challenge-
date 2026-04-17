@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
@@ -68,6 +68,33 @@ export default function HbeCertificatesTable({
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
+  // Optional columns that should be hidden if all values are empty
+  const optionalColumns = [
+    'pos_number',
+    'booking_date',
+    'supplier_name',
+    'rev_account_id',
+  ] as const
+
+  // Calculate which optional columns have data
+  const visibleOptionalColumns = useMemo(() => {
+    const visible = new Set<string>()
+    for (const cert of certificates) {
+      for (const col of optionalColumns) {
+        const value = cert[col as keyof typeof cert]
+        if (value !== null && value !== undefined && value !== '') {
+          visible.add(col)
+        }
+      }
+    }
+    return visible
+  }, [certificates])
+
+  const isColumnVisible = (col: string) => {
+    if (!optionalColumns.includes(col as typeof optionalColumns[number])) return true
+    return visibleOptionalColumns.has(col)
+  }
+
   const handleSort = (column: string) => {
     const newDirection = sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc'
     setSortColumn(column)
@@ -75,39 +102,48 @@ export default function HbeCertificatesTable({
     fetchPage(1, perPage, column, newDirection)
   }
 
-  const SortableHeader = ({ column, label }: { column: string; label: string }) => (
-    <TableCell
-      sx={{
-        color: 'grey.500',
-        borderColor: 'divider',
-        whiteSpace: 'nowrap',
-        cursor: 'pointer',
-        userSelect: 'none',
-        '&:hover': { color: 'grey.300' },
-      }}
-      onClick={() => handleSort(column)}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        {label}
-        <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
-          <ArrowUpwardIcon
-            sx={{
-              fontSize: 12,
-              color: sortColumn === column && sortDirection === 'asc' ? '#4ade80' : 'grey.700',
-              mb: -0.5,
-            }}
-          />
-          <ArrowDownwardIcon
-            sx={{
-              fontSize: 12,
-              color: sortColumn === column && sortDirection === 'desc' ? '#4ade80' : 'grey.700',
-              mt: -0.5,
-            }}
-          />
+  const SortableHeader = ({ column, label }: { column: string; label: string }) => {
+    if (!isColumnVisible(column)) return null
+    return (
+      <TableCell
+        sx={{
+          color: 'grey.500',
+          borderColor: 'divider',
+          whiteSpace: 'nowrap',
+          cursor: 'pointer',
+          userSelect: 'none',
+          '&:hover': { color: 'grey.300' },
+        }}
+        onClick={() => handleSort(column)}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          {label}
+          <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
+            <ArrowUpwardIcon
+              sx={{
+                fontSize: 12,
+                color: sortColumn === column && sortDirection === 'asc' ? '#4ade80' : 'grey.700',
+                mb: -0.5,
+              }}
+            />
+            <ArrowDownwardIcon
+              sx={{
+                fontSize: 12,
+                color: sortColumn === column && sortDirection === 'desc' ? '#4ade80' : 'grey.700',
+                mt: -0.5,
+              }}
+            />
+          </Box>
         </Box>
-      </Box>
-    </TableCell>
-  )
+      </TableCell>
+    )
+  }
+
+  // Cell component that conditionally renders based on column visibility
+  const Cell = ({ column, children, sx: cellSx }: { column: string; children: React.ReactNode; sx?: object }) => {
+    if (!isColumnVisible(column)) return null
+    return <TableCell sx={{ borderColor: 'divider', ...cellSx }}>{children}</TableCell>
+  }
 
   const fetchPage = (page: number, itemsPerPage: number, sortCol?: string | null, sortDir?: 'asc' | 'desc') => {
     const col = sortCol !== undefined ? sortCol : sortColumn
@@ -204,7 +240,7 @@ export default function HbeCertificatesTable({
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap', width: 80 }}>Actions</TableCell>
+              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap', width: 80, position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 1 }}>Actions</TableCell>
               <SortableHeader column="certificate_id" label="Certificate ID" />
               <SortableHeader column="hbe_type" label="Type" />
               <SortableHeader column="energy_delivered_gj" label="Energy (GJ)" />
@@ -230,19 +266,11 @@ export default function HbeCertificatesTable({
               const typeInfo = hbeTypeLabels[cert.hbe_type] || { label: cert.hbe_type, color: '#6b7280' }
               return (
                 <TableRow key={cert.id}>
-                  <TableCell sx={{ borderColor: 'divider', whiteSpace: 'nowrap' }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEditClick(cert)}
-                      sx={{ color: '#4ade80', '&:hover': { bgcolor: '#4ade8020' } }}
-                    >
+                  <TableCell sx={{ borderColor: 'divider', whiteSpace: 'nowrap', position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 1 }}>
+                    <IconButton size="small" onClick={() => handleEditClick(cert)} sx={{ color: '#4ade80', '&:hover': { bgcolor: '#4ade8020' } }}>
                       <EditIcon fontSize="small" />
                     </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteClick(cert)}
-                      sx={{ color: '#ef4444', '&:hover': { bgcolor: '#ef444420' } }}
-                    >
+                    <IconButton size="small" onClick={() => handleDeleteClick(cert)} sx={{ color: '#ef4444', '&:hover': { bgcolor: '#ef444420' } }}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
@@ -312,24 +340,24 @@ export default function HbeCertificatesTable({
                       }}
                     />
                   </TableCell>
-                  <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                  <Cell column="pos_number" sx={{ color: 'grey.400', fontFamily: 'monospace', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
                     {cert.pos_number}
-                  </TableCell>
+                  </Cell>
                   <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {cert.delivery_date}
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
+                  <Cell column="booking_date" sx={{ color: 'white', whiteSpace: 'nowrap' }}>
                     {cert.booking_date}
-                  </TableCell>
+                  </Cell>
                   <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {transportSectorLabels[cert.transport_sector] || cert.transport_sector}
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
+                  <Cell column="supplier_name" sx={{ color: 'white', whiteSpace: 'nowrap' }}>
                     {cert.supplier_name}
-                  </TableCell>
-                  <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                  </Cell>
+                  <Cell column="rev_account_id" sx={{ color: 'grey.400', fontFamily: 'monospace', fontSize: '0.75rem' }}>
                     {cert.rev_account_id}
-                  </TableCell>
+                  </Cell>
                   <TableCell sx={{ borderColor: 'divider' }}>
                     <Chip
                       label={cert.verification_status}
