@@ -117,6 +117,25 @@ export async function uploadHbeCertificates(formData: FormData): Promise<UploadR
 
   const validation = validateHbeRows(normalizedRows)
 
+  // If ANY rows have errors, return errors WITHOUT importing anything
+  if (validation.invalid.length > 0) {
+    const errors = validation.invalid.map((inv) => ({
+      row: inv.index + 2,
+      message: !inv.result.success
+        ? inv.result.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
+        : 'Unknown error',
+    }))
+
+    return {
+      success: true,
+      uploadId: '',
+      validCount: validation.valid.length,
+      invalidCount: validation.invalid.length,
+      errors,
+    }
+  }
+
+  // All rows valid - proceed with upload
   const timestamp = Date.now()
   const filePath = `${company.id}/${timestamp}_${file.name}`
 
@@ -261,6 +280,25 @@ export async function uploadSafCertificates(formData: FormData): Promise<UploadR
 
   const validation = validateSafRows(normalizedRows)
 
+  // If ANY rows have errors, return errors WITHOUT importing anything
+  if (validation.invalid.length > 0) {
+    const errors = validation.invalid.map((inv) => ({
+      row: inv.index + 2,
+      message: !inv.result.success
+        ? inv.result.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
+        : 'Unknown error',
+    }))
+
+    return {
+      success: true,
+      uploadId: '',
+      validCount: validation.valid.length,
+      invalidCount: validation.invalid.length,
+      errors,
+    }
+  }
+
+  // All rows valid - proceed with upload
   const timestamp = Date.now()
   const filePath = `${company.id}/${timestamp}_${file.name}`
 
@@ -426,6 +464,25 @@ export async function uploadFuelEuCertificates(formData: FormData): Promise<Uplo
 
   const validation = validateFuelEuRows(normalizedRows)
 
+  // If ANY rows have errors, return errors WITHOUT importing anything
+  if (validation.invalid.length > 0) {
+    const errors = validation.invalid.map((inv) => ({
+      row: inv.index + 2,
+      message: !inv.result.success
+        ? inv.result.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
+        : 'Unknown error',
+    }))
+
+    return {
+      success: true,
+      uploadId: '',
+      validCount: validation.valid.length,
+      invalidCount: validation.invalid.length,
+      errors,
+    }
+  }
+
+  // All rows valid - proceed with upload
   const timestamp = Date.now()
   const filePath = `${company.id}/${timestamp}_${file.name}`
 

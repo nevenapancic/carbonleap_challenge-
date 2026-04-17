@@ -135,15 +135,155 @@ export default function UploadForm({ sources }: Props) {
     }
 
     if (result.success) {
-      setUploadState({
-        status: 'success',
-        validCount: result.validCount,
-        invalidCount: result.invalidCount,
-        errors: result.errors,
-      })
-      setTimeout(() => router.push('/dashboard'), 2000)
+      // Only import if ALL rows are valid
+      if (result.invalidCount === 0 && result.validCount > 0) {
+        setUploadState({
+          status: 'success',
+          validCount: result.validCount,
+          invalidCount: 0,
+          errors: [],
+        })
+        setTimeout(() => router.push('/dashboard'), 2000)
+      } else {
+        // Has errors - nothing was imported, show validation errors
+        setUploadState({
+          status: 'error',
+          message: result.invalidCount > 0
+            ? `Found ${result.invalidCount} row${result.invalidCount > 1 ? 's' : ''} with errors. Nothing was imported - fix the issues and try again.`
+            : 'No valid certificates found in your file.',
+          validCount: 0,
+          invalidCount: result.invalidCount,
+          errors: result.errors,
+        })
+      }
     } else {
       setUploadState({ status: 'error', message: result.error })
+    }
+  }
+
+  // Field name mapping for cleaner display
+  const fieldNameMap: Record<string, string> = {
+    'certificate_id': 'Certificate ID',
+    'imo_number': 'IMO Number',
+    'ship_name': 'Ship Name',
+    'ship_type': 'Ship Type',
+    'flag_state': 'Flag State',
+    'gross_tonnage': 'Gross Tonnage',
+    'shipowner_company': 'Ship Owner',
+    'port_of_departure': 'Departure Port',
+    'port_of_arrival': 'Arrival Port',
+    'departure_date': 'Departure Date',
+    'arrival_date': 'Arrival Date',
+    'voyage_type': 'Voyage Type',
+    'fuel_type': 'Fuel Type',
+    'fuel_category': 'Fuel Category',
+    'total_fuel_consumption_mt': 'Fuel Consumption',
+    'wtw_emission_factor': 'WTW Factor',
+    'ghg_intensity_gco2eq_mj': 'GHG Intensity',
+    'target_ghg_intensity': 'Target GHG',
+    'compliance_status': 'Compliance',
+    'verification_status': 'Verification',
+    'reporting_period': 'Period',
+    'hbe_type': 'HBE Type',
+    'energy_delivered_gj': 'Energy',
+    'hbes_issued': 'HBEs',
+    'double_counting': 'Double Counting',
+    'multiplier': 'Multiplier',
+    'feedstock': 'Feedstock',
+    'nta8003_code': 'NTA Code',
+    'delivery_date': 'Delivery Date',
+    'booking_date': 'Booking Date',
+    'transport_sector': 'Sector',
+    'supplier_name': 'Supplier',
+    'rev_account_id': 'REV Account',
+    'ghg_reduction_percentage': 'GHG Reduction',
+    'sustainability_scheme': 'Scheme',
+    'production_country': 'Country',
+    'pos_number': 'PoS Number',
+    'volume_liters': 'Volume (L)',
+    'volume_mt': 'Volume (MT)',
+    'production_pathway': 'Pathway',
+    'producer_name': 'Producer',
+    'certification_scheme': 'Certification',
+    'corsia_eligible': 'CORSIA',
+    'eu_red_compliant': 'EU RED',
+    'issuance_date': 'Issue Date',
+    'feedstock_type': 'Feedstock',
+    'feedstock_country': 'Feedstock Country',
+  }
+
+  // Extract field issues with descriptions from error message
+  const extractFieldIssues = (message: string): { field: string; issue: string }[] => {
+    const issues: { field: string; issue: string }[] = []
+
+    // Split by comma to get individual field errors
+    const parts = message.split(/,\s*(?=[a-z_]+:|[A-Z])/)
+
+    parts.forEach(part => {
+      // Match "field_name: error description"
+      const colonMatch = part.match(/^([a-z_]+):\s*(.+)/i)
+      if (colonMatch) {
+        const fieldKey = colonMatch[1].toLowerCase()
+        const friendlyName = fieldNameMap[fieldKey] || colonMatch[1]
+        let issueDesc = colonMatch[2].trim()
+
+        // Skip if it's just "option" or similar noise
+        if (friendlyName.toLowerCase() === 'option') return
+
+        // Make the issue description user-friendly
+        if (issueDesc.includes('Required')) {
+          issueDesc = 'missing'
+        } else if (issueDesc.includes('expected one of')) {
+          // Extract valid options
+          const optionsMatch = issueDesc.match(/expected one of (.+)/)
+          if (optionsMatch) {
+            const options = optionsMatch[1].replace(/"/g, '').replace(/\|/g, ', ')
+            issueDesc = `invalid (use: ${options.substring(0, 50)}${options.length > 50 ? '...' : ''})`
+          } else {
+            issueDesc = 'invalid option'
+          }
+        } else if (issueDesc.includes('expected number')) {
+          issueDesc = 'should be a number'
+        } else if (issueDesc.includes('expected string')) {
+          issueDesc = 'missing'
+        } else {
+          issueDesc = 'invalid'
+        }
+
+        issues.push({ field: friendlyName, issue: issueDesc })
+      }
+    })
+
+    return issues.slice(0, 4) // Max 4 issues per row
+  }
+
+  // Analyze errors to provide helpful feedback
+  const analyzeErrors = () => {
+    if (!uploadState.errors || uploadState.errors.length === 0) return null
+
+    const totalRows = uploadState.errors.length
+    const certType = getCertificateType()
+
+    // If 5 or fewer errors, show them individually
+    if (totalRows <= 5) {
+      return {
+        type: 'row_errors',
+        rows: uploadState.errors.map(err => ({
+          row: err.row,
+          issues: extractFieldIssues(err.message)
+        }))
+      }
+    }
+
+    // More than 5 errors = likely wrong file format
+    let fileType = 'the selected source'
+    if (certType === 'fueleu') fileType = 'a FuelEU Maritime file'
+    else if (certType === 'hbe') fileType = 'an HBE file'
+    else if (certType === 'saf') fileType = 'a SAF file'
+
+    return {
+      type: 'wrong_format',
+      suggestion: `This doesn't look like ${fileType}.`
     }
   }
 
@@ -216,38 +356,161 @@ export default function UploadForm({ sources }: Props) {
           Upload Certificates
         </Typography>
 
-        {uploadState.status === 'success' && (
+        {/* Full Success - All rows valid */}
+        {uploadState.status === 'success' && uploadState.invalidCount === 0 && (
           <Alert severity="success" sx={{ mb: 3 }}>
-            Successfully imported {uploadState.validCount} certificates.
-            {uploadState.invalidCount! > 0 && (
-              <> {uploadState.invalidCount} rows had errors.</>
-            )}
+            Successfully imported {uploadState.validCount} certificates. Redirecting to dashboard...
           </Alert>
         )}
 
-        {uploadState.status === 'error' && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {uploadState.message}
-          </Alert>
-        )}
-
-        {uploadState.errors && uploadState.errors.length > 0 && (
-          <Alert severity="warning" sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Rows with errors (skipped):
-            </Typography>
-            {uploadState.errors.slice(0, 5).map((err) => (
-              <Typography key={err.row} variant="body2">
-                Row {err.row}: {err.message}
+        {/* Partial Success - Some valid, some invalid */}
+        {uploadState.status === 'success' && uploadState.invalidCount! > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                Partial Upload Complete
               </Typography>
-            ))}
-            {uploadState.errors.length > 5 && (
               <Typography variant="body2">
-                ...and {uploadState.errors.length - 5} more
+                {uploadState.validCount} certificates imported successfully, but {uploadState.invalidCount} rows had issues.
               </Typography>
-            )}
-          </Alert>
+            </Alert>
+            <Button
+              variant="contained"
+              onClick={() => router.push('/dashboard')}
+              sx={{ mr: 2 }}
+            >
+              Go to Dashboard
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setFile(null)
+                setUploadState({ status: 'idle' })
+              }}
+            >
+              Upload Another File
+            </Button>
+          </Box>
         )}
+
+        {/* Error Display - Combined */}
+        {(uploadState.status === 'error' || (uploadState.errors && uploadState.errors.length > 0)) && (() => {
+          const analysis = analyzeErrors()
+
+          // Wrong file format (more than 5 errors)
+          if (analysis?.type === 'wrong_format') {
+            return (
+              <Box
+                sx={{
+                  mb: 3,
+                  p: 3,
+                  borderRadius: 2,
+                  bgcolor: '#fef3c7',
+                  border: '1px solid #f59e0b',
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ color: '#92400e', fontWeight: 600, mb: 1 }}>
+                  Wrong file format?
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#78350f', mb: 2 }}>
+                  {analysis.suggestion}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#78350f', mb: 2 }}>
+                  Download a template below and try again.
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    setFile(null)
+                    setUploadState({ status: 'idle' })
+                  }}
+                  sx={{
+                    borderColor: '#92400e',
+                    color: '#92400e',
+                    '&:hover': { borderColor: '#78350f', bgcolor: '#fef3c720' }
+                  }}
+                >
+                  Try Again
+                </Button>
+              </Box>
+            )
+          }
+
+          // Individual row errors (5 or fewer)
+          if (analysis?.type === 'row_errors') {
+            return (
+              <Box
+                sx={{
+                  mb: 3,
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: '#1e1e1e',
+                  border: '1px solid',
+                  borderColor: 'grey.800',
+                }}
+              >
+                <Typography variant="subtitle2" sx={{ color: 'grey.400', mb: 2 }}>
+                  Issues found in {analysis.rows.length} row{analysis.rows.length > 1 ? 's' : ''}:
+                </Typography>
+
+                {analysis.rows.map(({ row, issues }) => (
+                  <Box
+                    key={row}
+                    sx={{
+                      mb: 2,
+                      pb: 2,
+                      borderBottom: '1px solid',
+                      borderColor: 'grey.800',
+                      '&:last-child': { borderBottom: 'none', mb: 0, pb: 0 }
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: '#f59e0b',
+                        fontWeight: 600,
+                        mb: 1
+                      }}
+                    >
+                      Row {row}
+                    </Typography>
+                    <Box sx={{ pl: 1 }}>
+                      {issues.map((item, i) => (
+                        <Typography
+                          key={i}
+                          variant="body2"
+                          sx={{ color: 'grey.400', fontSize: '0.85rem', mb: 0.5 }}
+                        >
+                          <Box component="span" sx={{ color: '#fca5a5', fontWeight: 500 }}>
+                            {item.field}
+                          </Box>
+                          {' '}- {item.issue}
+                        </Typography>
+                      ))}
+                      {issues.length === 0 && (
+                        <Typography variant="body2" sx={{ color: 'grey.500', fontSize: '0.85rem' }}>
+                          Invalid data format
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            )
+          }
+
+          // Generic error (e.g., file read error)
+          if (uploadState.status === 'error' && uploadState.message) {
+            return (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {uploadState.message}
+              </Alert>
+            )
+          }
+
+          return null
+        })()}
 
         <form onSubmit={handleSubmit}>
           <FormControl fullWidth margin="normal">
@@ -281,14 +544,8 @@ export default function UploadForm({ sources }: Props) {
 
           {selectedSourceData && (
             <>
-              <Alert severity="info" sx={{ mt: 2, mb: 2 }}>
-                <Typography variant="body2">
-                  {selectedSourceData.methodology_description}
-                </Typography>
-              </Alert>
-
               {/* Template Downloads */}
-              <Box sx={{ mb: 3 }}>
+              <Box sx={{ mt: 2, mb: 3 }}>
                 <Typography variant="body2" sx={{ color: 'grey.500', mb: 1 }}>
                   Download template:
                 </Typography>
