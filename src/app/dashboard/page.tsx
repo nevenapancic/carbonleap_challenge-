@@ -18,6 +18,9 @@ import { logout } from '../(auth)/actions'
 import HbeCertificatesTable from './HbeCertificatesTable'
 import SafCertificatesTable from './SafCertificatesTable'
 import FuelEuCertificatesTable from './FuelEuCertificatesTable'
+import HbeStatsDisplay from './HbeStatsDisplay'
+import SafStatsDisplay from './SafStatsDisplay'
+import FuelEuStatsDisplay from './FuelEuStatsDisplay'
 import { getPaginatedCertificates, getPaginatedSafCertificates, getPaginatedFuelEuCertificates } from './actions'
 
 export default async function DashboardPage() {
@@ -146,7 +149,7 @@ export default async function DashboardPage() {
           </Typography>
         </Box>
 
-        {hbeStats && hbeStats.totalCertificates > 0 && (
+        {hbeSource && hbeStats && hbeStats.totalCertificates > 0 && (
           <Card sx={{ bgcolor: 'background.paper', mb: 4 }}>
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
@@ -179,51 +182,15 @@ export default async function DashboardPage() {
                 />
               </Box>
 
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: 4,
-                  py: 3,
-                  borderTop: '1px solid',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
+              <HbeStatsDisplay
+                sourceId={hbeSource.id}
+                companyId={company.id}
+                initialStats={{
+                  totalCertificates: hbeStats.totalCertificates,
+                  totalEnergyGj: hbeStats.totalEnergyGj,
+                  latestDeliveryDate: hbeStats.latestDeliveryDate,
                 }}
-              >
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Certificates
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {hbeStats.totalCertificates}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    total records
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Total Energy
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {hbeStats.totalEnergyGj.toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    GJ
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Latest Issue
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {hbeStats.latestDeliveryDate || 'N/A'}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    DD/MM/YYYY format
-                  </Typography>
-                </Box>
-              </Box>
+              />
 
               {initialCertificates && initialCertificates.certificates.length > 0 && hbeSource && (
                 <Box sx={{ mt: 2 }}>
@@ -240,7 +207,7 @@ export default async function DashboardPage() {
           </Card>
         )}
 
-        {safStats && safStats.totalCertificates > 0 && (
+        {safSource && safStats && safStats.totalCertificates > 0 && (
           <Card sx={{ bgcolor: 'background.paper', mb: 4 }}>
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
@@ -273,62 +240,16 @@ export default async function DashboardPage() {
                 />
               </Box>
 
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)',
-                  gap: 4,
-                  py: 3,
-                  borderTop: '1px solid',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
+              <SafStatsDisplay
+                sourceId={safSource.id}
+                companyId={company.id}
+                initialStats={{
+                  totalCertificates: safStats.totalCertificates,
+                  totalVolumeMt: safStats.totalVolumeMt,
+                  avgGhgReduction: safStats.avgGhgReduction,
+                  corsiaEligibleCount: safStats.corsiaEligibleCount,
                 }}
-              >
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Certificates
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {safStats.totalCertificates}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    total records
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Total Volume
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {safStats.totalVolumeMt.toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    Metric Tons
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Avg GHG Reduction
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {safStats.avgGhgReduction}%
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    lifecycle reduction
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    CORSIA Eligible
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {safStats.corsiaEligibleCount}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    certificates
-                  </Typography>
-                </Box>
-              </Box>
+              />
 
               {initialSafCertificates && initialSafCertificates.certificates.length > 0 && safSource && (
                 <Box sx={{ mt: 2 }}>
@@ -345,7 +266,7 @@ export default async function DashboardPage() {
           </Card>
         )}
 
-        {fuelEuStats && fuelEuStats.totalCertificates > 0 && (
+        {fuelEuSource && fuelEuStats && fuelEuStats.totalCertificates > 0 && (
           <Card sx={{ bgcolor: 'background.paper', mb: 4 }}>
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
@@ -378,73 +299,17 @@ export default async function DashboardPage() {
                 />
               </Box>
 
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(5, 1fr)',
-                  gap: 4,
-                  py: 3,
-                  borderTop: '1px solid',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
+              <FuelEuStatsDisplay
+                sourceId={fuelEuSource.id}
+                companyId={company.id}
+                initialStats={{
+                  totalCertificates: fuelEuStats.totalCertificates,
+                  totalFuelConsumptionMt: fuelEuStats.totalFuelConsumptionMt,
+                  avgGhgIntensity: fuelEuStats.avgGhgIntensity,
+                  compliantCount: fuelEuStats.compliantCount,
+                  uniqueVessels: fuelEuStats.uniqueVessels,
                 }}
-              >
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Certificates
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {fuelEuStats.totalCertificates}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    total records
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Total Fuel
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {fuelEuStats.totalFuelConsumptionMt.toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    Metric Tons
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Avg GHG Intensity
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {fuelEuStats.avgGhgIntensity}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    gCO2eq/MJ
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Compliant
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {fuelEuStats.compliantCount}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    certificates
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Unique Vessels
-                  </Typography>
-                  <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
-                    {fuelEuStats.uniqueVessels}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.500' }}>
-                    IMO numbers
-                  </Typography>
-                </Box>
-              </Box>
+              />
 
               {initialFuelEuCertificates && initialFuelEuCertificates.certificates.length > 0 && fuelEuSource && (
                 <Box sx={{ mt: 2 }}>

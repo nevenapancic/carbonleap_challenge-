@@ -438,7 +438,7 @@ export default function UploadForm({ sources }: Props) {
           }
 
           // Individual row errors (5 or fewer)
-          if (analysis?.type === 'row_errors') {
+          if (analysis?.type === 'row_errors' && analysis.rows) {
             return (
               <Box
                 sx={{
