@@ -27,11 +27,13 @@ export default function DeleteConfirmationDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      PaperProps={{
-        sx: {
-          bgcolor: 'background.paper',
-          backgroundImage: 'none',
-          minWidth: 400,
+      slotProps={{
+        paper: {
+          sx: {
+            bgcolor: 'background.paper',
+            backgroundImage: 'none',
+            minWidth: 400,
+          },
         },
       }}
     >

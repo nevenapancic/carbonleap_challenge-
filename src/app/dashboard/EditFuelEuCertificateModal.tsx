@@ -140,11 +140,13 @@ export default function EditFuelEuCertificateModal({
       onClose={onClose}
       maxWidth="lg"
       fullWidth
-      PaperProps={{
-        sx: {
-          bgcolor: 'background.paper',
-          backgroundImage: 'none',
-          maxHeight: '90vh',
+      slotProps={{
+        paper: {
+          sx: {
+            bgcolor: 'background.paper',
+            backgroundImage: 'none',
+            maxHeight: '90vh',
+          },
         },
       }}
     >
