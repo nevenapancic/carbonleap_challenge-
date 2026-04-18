@@ -37,7 +37,7 @@ A modern certificate management platform for tracking and managing environmental
 ### Prerequisites
 
 - Node.js >= 20.9.0
-- npm or yarn
+- Yarn
 - Supabase account
 
 ### Installation
@@ -50,7 +50,7 @@ cd carbonleap
 
 2. Install dependencies:
 ```bash
-npm install
+yarn install
 ```
 
 3. Set up environment variables:
@@ -67,7 +67,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 5. Run the development server:
 ```bash
-npm run dev
+yarn dev
 ```
 
 6. Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -248,10 +248,10 @@ src/
 ## Scripts
 
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint
+yarn dev      # Start development server
+yarn build    # Build for production
+yarn start    # Start production server
+yarn lint     # Run ESLint
 ```
 
 ## License
