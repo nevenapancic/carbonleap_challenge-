@@ -140,13 +140,13 @@ export default async function SourcesPage() {
                 <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
                   Compliance Rate
                 </Typography>
-                <Typography variant="h3" sx={{ color: '#4ade80', fontWeight: 600, mt: 1 }}>
+                <Typography variant="h3" sx={{ color: fuelEuStats && fuelEuStats.totalCertificates > 0 ? '#4ade80' : 'text.secondary', fontWeight: 600, mt: 1 }}>
                   {fuelEuStats && fuelEuStats.totalCertificates > 0
-                    ? Math.round((fuelEuStats.compliantCount / fuelEuStats.totalCertificates) * 100)
-                    : 100}%
+                    ? `${Math.round((fuelEuStats.compliantCount / fuelEuStats.totalCertificates) * 100)}%`
+                    : '—'}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-                  FuelEU Maritime compliant
+                  {fuelEuStats && fuelEuStats.totalCertificates > 0 ? 'FuelEU Maritime compliant' : 'No certificates yet'}
                 </Typography>
               </CardContent>
             </Card>

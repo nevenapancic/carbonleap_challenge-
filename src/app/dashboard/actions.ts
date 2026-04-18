@@ -34,50 +34,8 @@ export async function getPaginatedCertificates(
 ): Promise<PaginatedCertificatesResult> {
   const supabase = await createClient();
 
-  const rawSearch = search?.trim() || '';
+  const rawSearch = search?.trim().toLowerCase() || '';
   const cleanedSearch = rawSearch.replace(/,/g, '');
-  const numericValue = Number(cleanedSearch);
-  const isNumericSearch =
-    !isNaN(numericValue) && /^\d+\.?\d*$/.test(cleanedSearch);
-
-  // For numeric searches, query ALL numeric columns
-  let numericMatchIds: string[] = [];
-  if (isNumericSearch) {
-    const ids = new Set<string>();
-
-    // Integer columns - use exact match
-    const integerColumns = ['hbes_issued'];
-    for (const column of integerColumns) {
-      const { data } = await supabase
-        .from('hbe_certificates')
-        .select('id')
-        .eq('company_id', companyId)
-        .eq('source_id', sourceId)
-        .eq(column, numericValue);
-
-      data?.forEach((m) => ids.add(m.id));
-    }
-
-    // Decimal columns - use range to handle floating point (e.g., 2 matches 2.0, 2.00)
-    const decimalColumns = [
-      'energy_delivered_gj',
-      'ghg_reduction_percentage',
-      'multiplier',
-    ];
-    for (const column of decimalColumns) {
-      const { data } = await supabase
-        .from('hbe_certificates')
-        .select('id')
-        .eq('company_id', companyId)
-        .eq('source_id', sourceId)
-        .gte(column, numericValue - 0.001)
-        .lte(column, numericValue + 0.001);
-
-      data?.forEach((m) => ids.add(m.id));
-    }
-
-    numericMatchIds = Array.from(ids);
-  }
 
   let query = supabase
     .from('hbe_certificates')
@@ -85,16 +43,13 @@ export async function getPaginatedCertificates(
     .eq('company_id', companyId)
     .eq('source_id', sourceId);
 
-  // Apply search filter
+  // Apply search filter - search ALL text columns with case-insensitive matching
   if (rawSearch) {
-    if (numericMatchIds.length > 0) {
-      query = query.in('id', numericMatchIds);
-    } else {
-      const likeTerm = `%${cleanedSearch}%`;
-      query = query.or(
-        `certificate_id.ilike.${likeTerm},hbe_type.ilike.${likeTerm},feedstock.ilike.${likeTerm},nta8003_code.ilike.${likeTerm},production_country.ilike.${likeTerm},sustainability_scheme.ilike.${likeTerm},pos_number.ilike.${likeTerm},transport_sector.ilike.${likeTerm},supplier_name.ilike.${likeTerm},rev_account_id.ilike.${likeTerm},verification_status.ilike.${likeTerm}`,
-      );
-    }
+    const likeTerm = `%${cleanedSearch}%`;
+    // Search across all text columns including dates cast as text
+    query = query.or(
+      `certificate_id.ilike.${likeTerm},hbe_type.ilike.${likeTerm},feedstock.ilike.${likeTerm},nta8003_code.ilike.${likeTerm},production_country.ilike.${likeTerm},sustainability_scheme.ilike.${likeTerm},pos_number.ilike.${likeTerm},transport_sector.ilike.${likeTerm},supplier_name.ilike.${likeTerm},rev_account_id.ilike.${likeTerm},verification_status.ilike.${likeTerm},delivery_date::text.ilike.${likeTerm},booking_date::text.ilike.${likeTerm},energy_delivered_gj::text.ilike.${likeTerm},hbes_issued::text.ilike.${likeTerm},ghg_reduction_percentage::text.ilike.${likeTerm},multiplier::text.ilike.${likeTerm}`,
+    );
   }
 
   if (sortColumn) {
@@ -167,52 +122,8 @@ export async function getPaginatedSafCertificates(
 ): Promise<PaginatedSafCertificatesResult> {
   const supabase = await createClient();
 
-  const rawSearch = search?.trim() || '';
+  const rawSearch = search?.trim().toLowerCase() || '';
   const cleanedSearch = rawSearch.replace(/,/g, '');
-  const numericValue = Number(cleanedSearch);
-  const isNumericSearch =
-    !isNaN(numericValue) && /^\d+\.?\d*$/.test(cleanedSearch);
-
-  // For numeric searches, query ALL numeric columns
-  let numericMatchIds: string[] = [];
-  if (isNumericSearch) {
-    const ids = new Set<string>();
-
-    // Integer columns - use exact match
-    const integerColumns = ['volume_liters', 'energy_content_mj'];
-    for (const column of integerColumns) {
-      const { data } = await supabase
-        .from('saf_certificates')
-        .select('id')
-        .eq('company_id', companyId)
-        .eq('source_id', sourceId)
-        .eq(column, numericValue);
-
-      data?.forEach((m) => ids.add(m.id));
-    }
-
-    // Decimal columns - use range to handle floating point
-    const decimalColumns = [
-      'volume_mt',
-      'blend_percentage',
-      'ghg_reduction_percentage',
-      'core_lca_value',
-      'lifecycle_emissions_gco2e_mj',
-    ];
-    for (const column of decimalColumns) {
-      const { data } = await supabase
-        .from('saf_certificates')
-        .select('id')
-        .eq('company_id', companyId)
-        .eq('source_id', sourceId)
-        .gte(column, numericValue - 0.01)
-        .lte(column, numericValue + 0.01);
-
-      data?.forEach((m) => ids.add(m.id));
-    }
-
-    numericMatchIds = Array.from(ids);
-  }
 
   let query = supabase
     .from('saf_certificates')
@@ -220,16 +131,12 @@ export async function getPaginatedSafCertificates(
     .eq('company_id', companyId)
     .eq('source_id', sourceId);
 
-  // Apply search filter
+  // Apply search filter - search ALL columns with case-insensitive matching
   if (rawSearch) {
-    if (numericMatchIds.length > 0) {
-      query = query.in('id', numericMatchIds);
-    } else {
-      const likeTerm = `%${cleanedSearch}%`;
-      query = query.or(
-        `certificate_id.ilike.${likeTerm},batch_id.ilike.${likeTerm},pos_number.ilike.${likeTerm},feedstock_type.ilike.${likeTerm},feedstock_country.ilike.${likeTerm},production_pathway.ilike.${likeTerm},producer_name.ilike.${likeTerm},production_country.ilike.${likeTerm},certification_scheme.ilike.${likeTerm},airline_name.ilike.${likeTerm},destination_airport.ilike.${likeTerm},supplier_name.ilike.${likeTerm},verification_status.ilike.${likeTerm}`,
-      );
-    }
+    const likeTerm = `%${cleanedSearch}%`;
+    query = query.or(
+      `certificate_id.ilike.${likeTerm},batch_id.ilike.${likeTerm},pos_number.ilike.${likeTerm},feedstock_type.ilike.${likeTerm},feedstock_country.ilike.${likeTerm},production_pathway.ilike.${likeTerm},producer_name.ilike.${likeTerm},production_country.ilike.${likeTerm},certification_scheme.ilike.${likeTerm},airline_name.ilike.${likeTerm},destination_airport.ilike.${likeTerm},supplier_name.ilike.${likeTerm},verification_status.ilike.${likeTerm},astm_pathway.ilike.${likeTerm},production_facility.ilike.${likeTerm},certifying_body.ilike.${likeTerm},certificate_status.ilike.${likeTerm},retirement_beneficiary.ilike.${likeTerm},chain_of_custody_type.ilike.${likeTerm},sustainability_tier.ilike.${likeTerm},issuance_date::text.ilike.${likeTerm},delivery_date::text.ilike.${likeTerm},expiration_date::text.ilike.${likeTerm},volume_liters::text.ilike.${likeTerm},volume_mt::text.ilike.${likeTerm},ghg_reduction_percentage::text.ilike.${likeTerm},blend_percentage::text.ilike.${likeTerm},energy_content_mj::text.ilike.${likeTerm}`,
+    );
   }
 
   if (sortColumn) {
@@ -313,68 +220,8 @@ export async function getPaginatedFuelEuCertificates(
 ): Promise<PaginatedFuelEuCertificatesResult> {
   const supabase = await createClient();
 
-  const rawSearch = search?.trim() || '';
+  const rawSearch = search?.trim().toLowerCase() || '';
   const cleanedSearch = rawSearch.replace(/,/g, '');
-  const numericValue = Number(cleanedSearch);
-  const isNumericSearch =
-    !isNaN(numericValue) && /^\d+\.?\d*$/.test(cleanedSearch);
-
-  // For numeric searches, query ALL numeric columns
-  let numericMatchIds: string[] = [];
-  if (isNumericSearch) {
-    const ids = new Set<string>();
-
-    // Integer columns - use exact match
-    const integerColumns = [
-      'gross_tonnage',
-      'distance_nm',
-      'energy_consumption_mj',
-    ];
-    for (const column of integerColumns) {
-      const { data } = await supabase
-        .from('fueleu_maritime_certificates')
-        .select('id')
-        .eq('company_id', companyId)
-        .eq('source_id', sourceId)
-        .eq(column, numericValue);
-
-      data?.forEach((m) => ids.add(m.id));
-    }
-
-    // Decimal columns - use range to handle floating point
-    const decimalColumns = [
-      'total_fuel_consumption_mt',
-      'time_at_sea_hours',
-      'time_at_berth_hours',
-      'fuel_consumption_sea_mt',
-      'fuel_consumption_berth_mt',
-      'lower_calorific_value_mj_kg',
-      'wtt_emission_factor',
-      'ttw_emission_factor',
-      'wtw_emission_factor',
-      'ghg_intensity_gco2eq_mj',
-      'total_co2eq_emissions_mt',
-      'target_ghg_intensity',
-      'compliance_balance',
-      'multiplier',
-      'banking_balance',
-      'borrowing_amount',
-      'shore_power_mwh',
-    ];
-    for (const column of decimalColumns) {
-      const { data } = await supabase
-        .from('fueleu_maritime_certificates')
-        .select('id')
-        .eq('company_id', companyId)
-        .eq('source_id', sourceId)
-        .gte(column, numericValue - 0.01)
-        .lte(column, numericValue + 0.01);
-
-      data?.forEach((m) => ids.add(m.id));
-    }
-
-    numericMatchIds = Array.from(ids);
-  }
 
   let query = supabase
     .from('fueleu_maritime_certificates')
@@ -382,18 +229,12 @@ export async function getPaginatedFuelEuCertificates(
     .eq('company_id', companyId)
     .eq('source_id', sourceId);
 
-  // Apply search filter
+  // Apply search filter - search ALL columns with case-insensitive matching
   if (rawSearch) {
-    // If we have numeric matches, filter by those IDs directly
-    if (numericMatchIds.length > 0) {
-      query = query.in('id', numericMatchIds);
-    } else {
-      // Text search only
-      const likeTerm = `%${cleanedSearch}%`;
-      query = query.or(
-        `certificate_id.ilike.${likeTerm},imo_number.ilike.${likeTerm},ship_name.ilike.${likeTerm},ship_type.ilike.${likeTerm},flag_state.ilike.${likeTerm},shipowner_company.ilike.${likeTerm},voyage_id.ilike.${likeTerm},port_of_departure.ilike.${likeTerm},port_of_arrival.ilike.${likeTerm},voyage_type.ilike.${likeTerm},fuel_type.ilike.${likeTerm},fuel_category.ilike.${likeTerm},compliance_status.ilike.${likeTerm},certification_scheme.ilike.${likeTerm},pos_number.ilike.${likeTerm},feedstock_type.ilike.${likeTerm},verifier_name.ilike.${likeTerm},verification_status.ilike.${likeTerm},reporting_period.ilike.${likeTerm}`,
-      );
-    }
+    const likeTerm = `%${cleanedSearch}%`;
+    query = query.or(
+      `certificate_id.ilike.${likeTerm},imo_number.ilike.${likeTerm},ship_name.ilike.${likeTerm},ship_type.ilike.${likeTerm},flag_state.ilike.${likeTerm},shipowner_company.ilike.${likeTerm},voyage_id.ilike.${likeTerm},port_of_departure.ilike.${likeTerm},port_of_arrival.ilike.${likeTerm},voyage_type.ilike.${likeTerm},fuel_type.ilike.${likeTerm},fuel_category.ilike.${likeTerm},compliance_status.ilike.${likeTerm},certification_scheme.ilike.${likeTerm},pos_number.ilike.${likeTerm},feedstock_type.ilike.${likeTerm},verifier_name.ilike.${likeTerm},verification_status.ilike.${likeTerm},reporting_period.ilike.${likeTerm},pool_id.ilike.${likeTerm},departure_date::text.ilike.${likeTerm},arrival_date::text.ilike.${likeTerm},gross_tonnage::text.ilike.${likeTerm},total_fuel_consumption_mt::text.ilike.${likeTerm},ghg_intensity_gco2eq_mj::text.ilike.${likeTerm},target_ghg_intensity::text.ilike.${likeTerm},wtw_emission_factor::text.ilike.${likeTerm},distance_nm::text.ilike.${likeTerm},multiplier::text.ilike.${likeTerm}`,
+    );
   }
 
   if (sortColumn) {
