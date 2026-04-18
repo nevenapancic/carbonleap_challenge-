@@ -1,20 +1,26 @@
-'use server'
+/** @format */
 
-import { createClient } from '@/lib/supabase/server'
-import type { HbeCertificateData, SafCertificateData, FuelEuMaritimeCertificateData } from '@/lib/types/database'
+'use server';
+
+import { createClient } from '@/lib/supabase/server';
+import type {
+  HbeCertificateData,
+  SafCertificateData,
+  FuelEuMaritimeCertificateData,
+} from '@/lib/types/database';
 
 export type PaginatedCertificatesResult = {
-  certificates: (HbeCertificateData & { id: string })[]
-  totalCount: number
-  totalPages: number
-}
+  certificates: (HbeCertificateData & { id: string })[];
+  totalCount: number;
+  totalPages: number;
+};
 
 function formatDateForDisplay(dateStr: string): string {
-  const date = new Date(dateStr)
-  const day = date.getDate().toString().padStart(2, '0')
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  const year = date.getFullYear()
-  return `${day}/${month}/${year}`
+  const date = new Date(dateStr);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 export async function getPaginatedCertificates(
@@ -24,44 +30,86 @@ export async function getPaginatedCertificates(
   perPage: number,
   sortColumn?: string | null,
   sortDirection?: 'asc' | 'desc',
-  search?: string
+  search?: string,
 ): Promise<PaginatedCertificatesResult> {
-  const supabase = await createClient()
+  const supabase = await createClient();
+
+  const rawSearch = search?.trim() || '';
+  const cleanedSearch = rawSearch.replace(/,/g, '');
+  const numericValue = Number(cleanedSearch);
+  const isNumericSearch =
+    !isNaN(numericValue) && /^\d+\.?\d*$/.test(cleanedSearch);
+
+  // For numeric searches, query ALL numeric columns
+  let numericMatchIds: string[] = [];
+  if (isNumericSearch) {
+    const ids = new Set<string>();
+
+    // Integer columns - use exact match
+    const integerColumns = ['hbes_issued'];
+    for (const column of integerColumns) {
+      const { data } = await supabase
+        .from('hbe_certificates')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('source_id', sourceId)
+        .eq(column, numericValue);
+
+      data?.forEach((m) => ids.add(m.id));
+    }
+
+    // Decimal columns - use range to handle floating point (e.g., 2 matches 2.0, 2.00)
+    const decimalColumns = [
+      'energy_delivered_gj',
+      'ghg_reduction_percentage',
+      'multiplier',
+    ];
+    for (const column of decimalColumns) {
+      const { data } = await supabase
+        .from('hbe_certificates')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('source_id', sourceId)
+        .gte(column, numericValue - 0.001)
+        .lte(column, numericValue + 0.001);
+
+      data?.forEach((m) => ids.add(m.id));
+    }
+
+    numericMatchIds = Array.from(ids);
+  }
 
   let query = supabase
     .from('hbe_certificates')
     .select('*', { count: 'exact' })
     .eq('company_id', companyId)
-    .eq('source_id', sourceId)
+    .eq('source_id', sourceId);
 
-  // Apply search filter across text and numeric columns
-  if (search && search.trim()) {
-    const searchTerm = `%${search.trim()}%`
-    // Check if search term is a number (remove commas first)
-    const cleanedNumber = search.replace(/,/g, '').trim()
-    const numericValue = Number(cleanedNumber)
-    const isNumeric = !isNaN(numericValue) && cleanedNumber !== ''
-
-    let orConditions = `certificate_id.ilike.${searchTerm},hbe_type.ilike.${searchTerm},feedstock.ilike.${searchTerm},nta8003_code.ilike.${searchTerm},production_country.ilike.${searchTerm},sustainability_scheme.ilike.${searchTerm},pos_number.ilike.${searchTerm},transport_sector.ilike.${searchTerm},supplier_name.ilike.${searchTerm},rev_account_id.ilike.${searchTerm},verification_status.ilike.${searchTerm}`
-
-    // Add numeric field searches if the search term is a number
-    if (isNumeric) {
-      orConditions += `,energy_delivered_gj.eq.${numericValue},hbes_issued.eq.${numericValue},ghg_reduction_percentage.eq.${numericValue},multiplier.eq.${numericValue}`
+  // Apply search filter
+  if (rawSearch) {
+    if (numericMatchIds.length > 0) {
+      query = query.in('id', numericMatchIds);
+    } else {
+      const likeTerm = `%${cleanedSearch}%`;
+      query = query.or(
+        `certificate_id.ilike.${likeTerm},hbe_type.ilike.${likeTerm},feedstock.ilike.${likeTerm},nta8003_code.ilike.${likeTerm},production_country.ilike.${likeTerm},sustainability_scheme.ilike.${likeTerm},pos_number.ilike.${likeTerm},transport_sector.ilike.${likeTerm},supplier_name.ilike.${likeTerm},rev_account_id.ilike.${likeTerm},verification_status.ilike.${likeTerm}`,
+      );
     }
-
-    query = query.or(orConditions)
   }
 
   if (sortColumn) {
-    query = query.order(sortColumn, { ascending: sortDirection === 'asc' })
+    query = query.order(sortColumn, { ascending: sortDirection === 'asc' });
   } else {
-    query = query.order('created_at', { ascending: false })
+    query = query.order('created_at', { ascending: false });
   }
 
-  const { data: certs, count } = await query.range((page - 1) * perPage, page * perPage - 1)
+  const { data: certs, count } = await query.range(
+    (page - 1) * perPage,
+    page * perPage - 1,
+  );
 
   if (!certs) {
-    return { certificates: [], totalCount: 0, totalPages: 0 }
+    return { certificates: [], totalCount: 0, totalPages: 0 };
   }
 
   const certificates = certs.map((cert) => ({
@@ -84,28 +132,28 @@ export async function getPaginatedCertificates(
     sustainability_scheme: cert.sustainability_scheme,
     production_country: cert.production_country,
     pos_number: cert.pos_number,
-  }))
+  }));
 
-  const totalCount = count || 0
-  const totalPages = Math.ceil(totalCount / perPage)
+  const totalCount = count || 0;
+  const totalPages = Math.ceil(totalCount / perPage);
 
-  return { certificates, totalCount, totalPages }
+  return { certificates, totalCount, totalPages };
 }
 
 // SAF Certificates Pagination
 export type PaginatedSafCertificatesResult = {
-  certificates: (SafCertificateData & { id: string })[]
-  totalCount: number
-  totalPages: number
-}
+  certificates: (SafCertificateData & { id: string })[];
+  totalCount: number;
+  totalPages: number;
+};
 
 function formatDateForDisplayNullable(dateStr: string | null): string | null {
-  if (!dateStr) return null
-  const date = new Date(dateStr)
-  const day = date.getDate().toString().padStart(2, '0')
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  const year = date.getFullYear()
-  return `${day}/${month}/${year}`
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 export async function getPaginatedSafCertificates(
@@ -115,44 +163,88 @@ export async function getPaginatedSafCertificates(
   perPage: number,
   sortColumn?: string | null,
   sortDirection?: 'asc' | 'desc',
-  search?: string
+  search?: string,
 ): Promise<PaginatedSafCertificatesResult> {
-  const supabase = await createClient()
+  const supabase = await createClient();
+
+  const rawSearch = search?.trim() || '';
+  const cleanedSearch = rawSearch.replace(/,/g, '');
+  const numericValue = Number(cleanedSearch);
+  const isNumericSearch =
+    !isNaN(numericValue) && /^\d+\.?\d*$/.test(cleanedSearch);
+
+  // For numeric searches, query ALL numeric columns
+  let numericMatchIds: string[] = [];
+  if (isNumericSearch) {
+    const ids = new Set<string>();
+
+    // Integer columns - use exact match
+    const integerColumns = ['volume_liters', 'energy_content_mj'];
+    for (const column of integerColumns) {
+      const { data } = await supabase
+        .from('saf_certificates')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('source_id', sourceId)
+        .eq(column, numericValue);
+
+      data?.forEach((m) => ids.add(m.id));
+    }
+
+    // Decimal columns - use range to handle floating point
+    const decimalColumns = [
+      'volume_mt',
+      'blend_percentage',
+      'ghg_reduction_percentage',
+      'core_lca_value',
+      'lifecycle_emissions_gco2e_mj',
+    ];
+    for (const column of decimalColumns) {
+      const { data } = await supabase
+        .from('saf_certificates')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('source_id', sourceId)
+        .gte(column, numericValue - 0.01)
+        .lte(column, numericValue + 0.01);
+
+      data?.forEach((m) => ids.add(m.id));
+    }
+
+    numericMatchIds = Array.from(ids);
+  }
 
   let query = supabase
     .from('saf_certificates')
     .select('*', { count: 'exact' })
     .eq('company_id', companyId)
-    .eq('source_id', sourceId)
+    .eq('source_id', sourceId);
 
-  // Apply search filter across text and numeric columns
-  if (search && search.trim()) {
-    const searchTerm = `%${search.trim()}%`
-    // Check if search term is a number (remove commas first)
-    const cleanedNumber = search.replace(/,/g, '').trim()
-    const numericValue = Number(cleanedNumber)
-    const isNumeric = !isNaN(numericValue) && cleanedNumber !== ''
-
-    let orConditions = `certificate_id.ilike.${searchTerm},batch_id.ilike.${searchTerm},pos_number.ilike.${searchTerm},feedstock_type.ilike.${searchTerm},feedstock_country.ilike.${searchTerm},production_pathway.ilike.${searchTerm},producer_name.ilike.${searchTerm},production_country.ilike.${searchTerm},certification_scheme.ilike.${searchTerm},airline_name.ilike.${searchTerm},destination_airport.ilike.${searchTerm},supplier_name.ilike.${searchTerm},verification_status.ilike.${searchTerm}`
-
-    // Add numeric field searches if the search term is a number
-    if (isNumeric) {
-      orConditions += `,volume_liters.eq.${numericValue},volume_mt.eq.${numericValue},ghg_reduction_percentage.eq.${numericValue}`
+  // Apply search filter
+  if (rawSearch) {
+    if (numericMatchIds.length > 0) {
+      query = query.in('id', numericMatchIds);
+    } else {
+      const likeTerm = `%${cleanedSearch}%`;
+      query = query.or(
+        `certificate_id.ilike.${likeTerm},batch_id.ilike.${likeTerm},pos_number.ilike.${likeTerm},feedstock_type.ilike.${likeTerm},feedstock_country.ilike.${likeTerm},production_pathway.ilike.${likeTerm},producer_name.ilike.${likeTerm},production_country.ilike.${likeTerm},certification_scheme.ilike.${likeTerm},airline_name.ilike.${likeTerm},destination_airport.ilike.${likeTerm},supplier_name.ilike.${likeTerm},verification_status.ilike.${likeTerm}`,
+      );
     }
-
-    query = query.or(orConditions)
   }
 
   if (sortColumn) {
-    query = query.order(sortColumn, { ascending: sortDirection === 'asc' })
+    query = query.order(sortColumn, { ascending: sortDirection === 'asc' });
   } else {
-    query = query.order('created_at', { ascending: false })
+    query = query.order('created_at', { ascending: false });
   }
 
-  const { data: certs, count } = await query.range((page - 1) * perPage, page * perPage - 1)
+  const { data: certs, count } = await query.range(
+    (page - 1) * perPage,
+    page * perPage - 1,
+  );
 
   if (!certs) {
-    return { certificates: [], totalCount: 0, totalPages: 0 }
+    return { certificates: [], totalCount: 0, totalPages: 0 };
   }
 
   const certificates = certs.map((cert) => ({
@@ -162,11 +254,17 @@ export async function getPaginatedSafCertificates(
     pos_number: cert.pos_number,
     volume_liters: Number(cert.volume_liters),
     volume_mt: Number(cert.volume_mt),
-    energy_content_mj: cert.energy_content_mj ? Number(cert.energy_content_mj) : null,
-    blend_percentage: cert.blend_percentage ? Number(cert.blend_percentage) : null,
+    energy_content_mj: cert.energy_content_mj
+      ? Number(cert.energy_content_mj)
+      : null,
+    blend_percentage: cert.blend_percentage
+      ? Number(cert.blend_percentage)
+      : null,
     ghg_reduction_percentage: Number(cert.ghg_reduction_percentage),
     core_lca_value: cert.core_lca_value ? Number(cert.core_lca_value) : null,
-    lifecycle_emissions_gco2e_mj: cert.lifecycle_emissions_gco2e_mj ? Number(cert.lifecycle_emissions_gco2e_mj) : null,
+    lifecycle_emissions_gco2e_mj: cert.lifecycle_emissions_gco2e_mj
+      ? Number(cert.lifecycle_emissions_gco2e_mj)
+      : null,
     feedstock_type: cert.feedstock_type,
     feedstock_country: cert.feedstock_country,
     production_pathway: cert.production_pathway,
@@ -190,19 +288,19 @@ export async function getPaginatedSafCertificates(
     chain_of_custody_type: cert.chain_of_custody_type,
     supplier_name: cert.supplier_name,
     sustainability_tier: cert.sustainability_tier,
-  }))
+  }));
 
-  const totalCount = count || 0
-  const totalPages = Math.ceil(totalCount / perPage)
+  const totalCount = count || 0;
+  const totalPages = Math.ceil(totalCount / perPage);
 
-  return { certificates, totalCount, totalPages }
+  return { certificates, totalCount, totalPages };
 }
 
 export type PaginatedFuelEuCertificatesResult = {
-  certificates: (FuelEuMaritimeCertificateData & { id: string })[]
-  totalCount: number
-  totalPages: number
-}
+  certificates: (FuelEuMaritimeCertificateData & { id: string })[];
+  totalCount: number;
+  totalPages: number;
+};
 
 export async function getPaginatedFuelEuCertificates(
   sourceId: string,
@@ -211,44 +309,106 @@ export async function getPaginatedFuelEuCertificates(
   perPage: number,
   sortColumn?: string | null,
   sortDirection?: 'asc' | 'desc',
-  search?: string
+  search?: string,
 ): Promise<PaginatedFuelEuCertificatesResult> {
-  const supabase = await createClient()
+  const supabase = await createClient();
+
+  const rawSearch = search?.trim() || '';
+  const cleanedSearch = rawSearch.replace(/,/g, '');
+  const numericValue = Number(cleanedSearch);
+  const isNumericSearch =
+    !isNaN(numericValue) && /^\d+\.?\d*$/.test(cleanedSearch);
+
+  // For numeric searches, query ALL numeric columns
+  let numericMatchIds: string[] = [];
+  if (isNumericSearch) {
+    const ids = new Set<string>();
+
+    // Integer columns - use exact match
+    const integerColumns = [
+      'gross_tonnage',
+      'distance_nm',
+      'energy_consumption_mj',
+    ];
+    for (const column of integerColumns) {
+      const { data } = await supabase
+        .from('fueleu_maritime_certificates')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('source_id', sourceId)
+        .eq(column, numericValue);
+
+      data?.forEach((m) => ids.add(m.id));
+    }
+
+    // Decimal columns - use range to handle floating point
+    const decimalColumns = [
+      'total_fuel_consumption_mt',
+      'time_at_sea_hours',
+      'time_at_berth_hours',
+      'fuel_consumption_sea_mt',
+      'fuel_consumption_berth_mt',
+      'lower_calorific_value_mj_kg',
+      'wtt_emission_factor',
+      'ttw_emission_factor',
+      'wtw_emission_factor',
+      'ghg_intensity_gco2eq_mj',
+      'total_co2eq_emissions_mt',
+      'target_ghg_intensity',
+      'compliance_balance',
+      'multiplier',
+      'banking_balance',
+      'borrowing_amount',
+      'shore_power_mwh',
+    ];
+    for (const column of decimalColumns) {
+      const { data } = await supabase
+        .from('fueleu_maritime_certificates')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('source_id', sourceId)
+        .gte(column, numericValue - 0.01)
+        .lte(column, numericValue + 0.01);
+
+      data?.forEach((m) => ids.add(m.id));
+    }
+
+    numericMatchIds = Array.from(ids);
+  }
 
   let query = supabase
     .from('fueleu_maritime_certificates')
     .select('*', { count: 'exact' })
     .eq('company_id', companyId)
-    .eq('source_id', sourceId)
+    .eq('source_id', sourceId);
 
-  // Apply search filter across text and numeric columns
-  if (search && search.trim()) {
-    const searchTerm = `%${search.trim()}%`
-    // Check if search term is a number (remove commas first)
-    const cleanedNumber = search.replace(/,/g, '').trim()
-    const numericValue = Number(cleanedNumber)
-    const isNumeric = !isNaN(numericValue) && cleanedNumber !== ''
-
-    let orConditions = `certificate_id.ilike.${searchTerm},imo_number.ilike.${searchTerm},ship_name.ilike.${searchTerm},ship_type.ilike.${searchTerm},flag_state.ilike.${searchTerm},shipowner_company.ilike.${searchTerm},voyage_id.ilike.${searchTerm},port_of_departure.ilike.${searchTerm},port_of_arrival.ilike.${searchTerm},voyage_type.ilike.${searchTerm},fuel_type.ilike.${searchTerm},fuel_category.ilike.${searchTerm},compliance_status.ilike.${searchTerm},certification_scheme.ilike.${searchTerm},pos_number.ilike.${searchTerm},feedstock_type.ilike.${searchTerm},verifier_name.ilike.${searchTerm},verification_status.ilike.${searchTerm},reporting_period.ilike.${searchTerm}`
-
-    // Add numeric field searches if the search term is a number
-    if (isNumeric) {
-      orConditions += `,gross_tonnage.eq.${numericValue},total_fuel_consumption_mt.eq.${numericValue}`
+  // Apply search filter
+  if (rawSearch) {
+    // If we have numeric matches, filter by those IDs directly
+    if (numericMatchIds.length > 0) {
+      query = query.in('id', numericMatchIds);
+    } else {
+      // Text search only
+      const likeTerm = `%${cleanedSearch}%`;
+      query = query.or(
+        `certificate_id.ilike.${likeTerm},imo_number.ilike.${likeTerm},ship_name.ilike.${likeTerm},ship_type.ilike.${likeTerm},flag_state.ilike.${likeTerm},shipowner_company.ilike.${likeTerm},voyage_id.ilike.${likeTerm},port_of_departure.ilike.${likeTerm},port_of_arrival.ilike.${likeTerm},voyage_type.ilike.${likeTerm},fuel_type.ilike.${likeTerm},fuel_category.ilike.${likeTerm},compliance_status.ilike.${likeTerm},certification_scheme.ilike.${likeTerm},pos_number.ilike.${likeTerm},feedstock_type.ilike.${likeTerm},verifier_name.ilike.${likeTerm},verification_status.ilike.${likeTerm},reporting_period.ilike.${likeTerm}`,
+      );
     }
-
-    query = query.or(orConditions)
   }
 
   if (sortColumn) {
-    query = query.order(sortColumn, { ascending: sortDirection === 'asc' })
+    query = query.order(sortColumn, { ascending: sortDirection === 'asc' });
   } else {
-    query = query.order('created_at', { ascending: false })
+    query = query.order('created_at', { ascending: false });
   }
 
-  const { data: certs, count } = await query.range((page - 1) * perPage, page * perPage - 1)
+  const { data: certs, count } = await query.range(
+    (page - 1) * perPage,
+    page * perPage - 1,
+  );
 
   if (!certs) {
-    return { certificates: [], totalCount: 0, totalPages: 0 }
+    return { certificates: [], totalCount: 0, totalPages: 0 };
   }
 
   const certificates = certs.map((cert) => ({
@@ -268,144 +428,183 @@ export async function getPaginatedFuelEuCertificates(
     arrival_date: formatDateForDisplay(cert.arrival_date),
     voyage_type: cert.voyage_type,
     distance_nm: cert.distance_nm ? Number(cert.distance_nm) : null,
-    time_at_sea_hours: cert.time_at_sea_hours ? Number(cert.time_at_sea_hours) : null,
-    time_at_berth_hours: cert.time_at_berth_hours ? Number(cert.time_at_berth_hours) : null,
+    time_at_sea_hours: cert.time_at_sea_hours
+      ? Number(cert.time_at_sea_hours)
+      : null,
+    time_at_berth_hours: cert.time_at_berth_hours
+      ? Number(cert.time_at_berth_hours)
+      : null,
     fuel_type: cert.fuel_type,
     fuel_category: cert.fuel_category,
-    fuel_consumption_sea_mt: cert.fuel_consumption_sea_mt ? Number(cert.fuel_consumption_sea_mt) : null,
-    fuel_consumption_berth_mt: cert.fuel_consumption_berth_mt ? Number(cert.fuel_consumption_berth_mt) : null,
+    fuel_consumption_sea_mt: cert.fuel_consumption_sea_mt
+      ? Number(cert.fuel_consumption_sea_mt)
+      : null,
+    fuel_consumption_berth_mt: cert.fuel_consumption_berth_mt
+      ? Number(cert.fuel_consumption_berth_mt)
+      : null,
     total_fuel_consumption_mt: Number(cert.total_fuel_consumption_mt),
-    lower_calorific_value_mj_kg: cert.lower_calorific_value_mj_kg ? Number(cert.lower_calorific_value_mj_kg) : null,
-    energy_consumption_mj: cert.energy_consumption_mj ? Number(cert.energy_consumption_mj) : null,
-    wtt_emission_factor: cert.wtt_emission_factor ? Number(cert.wtt_emission_factor) : null,
-    ttw_emission_factor: cert.ttw_emission_factor ? Number(cert.ttw_emission_factor) : null,
+    lower_calorific_value_mj_kg: cert.lower_calorific_value_mj_kg
+      ? Number(cert.lower_calorific_value_mj_kg)
+      : null,
+    energy_consumption_mj: cert.energy_consumption_mj
+      ? Number(cert.energy_consumption_mj)
+      : null,
+    wtt_emission_factor: cert.wtt_emission_factor
+      ? Number(cert.wtt_emission_factor)
+      : null,
+    ttw_emission_factor: cert.ttw_emission_factor
+      ? Number(cert.ttw_emission_factor)
+      : null,
     wtw_emission_factor: Number(cert.wtw_emission_factor),
     ghg_intensity_gco2eq_mj: Number(cert.ghg_intensity_gco2eq_mj),
-    total_co2eq_emissions_mt: cert.total_co2eq_emissions_mt ? Number(cert.total_co2eq_emissions_mt) : null,
-    methane_slip_gch4_kwh: cert.methane_slip_gch4_kwh ? Number(cert.methane_slip_gch4_kwh) : null,
-    n2o_emissions_gn2o_kwh: cert.n2o_emissions_gn2o_kwh ? Number(cert.n2o_emissions_gn2o_kwh) : null,
+    total_co2eq_emissions_mt: cert.total_co2eq_emissions_mt
+      ? Number(cert.total_co2eq_emissions_mt)
+      : null,
+    methane_slip_gch4_kwh: cert.methane_slip_gch4_kwh
+      ? Number(cert.methane_slip_gch4_kwh)
+      : null,
+    n2o_emissions_gn2o_kwh: cert.n2o_emissions_gn2o_kwh
+      ? Number(cert.n2o_emissions_gn2o_kwh)
+      : null,
     target_ghg_intensity: Number(cert.target_ghg_intensity),
-    compliance_balance: cert.compliance_balance ? Number(cert.compliance_balance) : null,
+    compliance_balance: cert.compliance_balance
+      ? Number(cert.compliance_balance)
+      : null,
     compliance_status: cert.compliance_status,
     rfnbo_subtarget_met: cert.rfnbo_subtarget_met,
     certification_scheme: cert.certification_scheme,
     pos_number: cert.pos_number,
     feedstock_type: cert.feedstock_type,
-    e_value_gco2eq_mj: cert.e_value_gco2eq_mj ? Number(cert.e_value_gco2eq_mj) : null,
+    e_value_gco2eq_mj: cert.e_value_gco2eq_mj
+      ? Number(cert.e_value_gco2eq_mj)
+      : null,
     multiplier: Number(cert.multiplier) || 1.0,
     pool_id: cert.pool_id,
     banking_balance: cert.banking_balance ? Number(cert.banking_balance) : null,
-    borrowing_amount: cert.borrowing_amount ? Number(cert.borrowing_amount) : null,
+    borrowing_amount: cert.borrowing_amount
+      ? Number(cert.borrowing_amount)
+      : null,
     ops_connected: cert.ops_connected,
     ops_exception_applied: cert.ops_exception_applied,
     shore_power_mwh: cert.shore_power_mwh ? Number(cert.shore_power_mwh) : null,
     verifier_name: cert.verifier_name,
     verification_status: cert.verification_status,
     document_of_compliance_issued: cert.document_of_compliance_issued,
-  }))
+  }));
 
-  const totalCount = count || 0
-  const totalPages = Math.ceil(totalCount / perPage)
+  const totalCount = count || 0;
+  const totalPages = Math.ceil(totalCount / perPage);
 
-  return { certificates, totalCount, totalPages }
+  return { certificates, totalCount, totalPages };
 }
 
 type DeleteResult = {
-  success: boolean
-  error?: string
-}
+  success: boolean;
+  error?: string;
+};
 
 type UpdateResult = {
-  success: boolean
-  error?: string
-}
+  success: boolean;
+  error?: string;
+};
 
 export async function deleteHbeCertificate(id: string): Promise<DeleteResult> {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from('hbe_certificates')
     .delete()
-    .eq('id', id)
+    .eq('id', id);
 
   if (error) {
-    return { success: false, error: error.message }
+    return { success: false, error: error.message };
   }
 
-  return { success: true }
+  return { success: true };
 }
 
-export async function updateHbeCertificate(id: string, data: Partial<HbeCertificateData>): Promise<UpdateResult> {
-  const supabase = await createClient()
+export async function updateHbeCertificate(
+  id: string,
+  data: Partial<HbeCertificateData>,
+): Promise<UpdateResult> {
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from('hbe_certificates')
     .update(data)
-    .eq('id', id)
+    .eq('id', id);
 
   if (error) {
-    return { success: false, error: error.message }
+    return { success: false, error: error.message };
   }
 
-  return { success: true }
+  return { success: true };
 }
 
 export async function deleteSafCertificate(id: string): Promise<DeleteResult> {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from('saf_certificates')
     .delete()
-    .eq('id', id)
+    .eq('id', id);
 
   if (error) {
-    return { success: false, error: error.message }
+    return { success: false, error: error.message };
   }
 
-  return { success: true }
+  return { success: true };
 }
 
-export async function updateSafCertificate(id: string, data: Partial<SafCertificateData>): Promise<UpdateResult> {
-  const supabase = await createClient()
+export async function updateSafCertificate(
+  id: string,
+  data: Partial<SafCertificateData>,
+): Promise<UpdateResult> {
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from('saf_certificates')
     .update(data)
-    .eq('id', id)
+    .eq('id', id);
 
   if (error) {
-    return { success: false, error: error.message }
+    return { success: false, error: error.message };
   }
 
-  return { success: true }
+  return { success: true };
 }
 
-export async function deleteFuelEuCertificate(id: string): Promise<DeleteResult> {
-  const supabase = await createClient()
+export async function deleteFuelEuCertificate(
+  id: string,
+): Promise<DeleteResult> {
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from('fueleu_maritime_certificates')
     .delete()
-    .eq('id', id)
+    .eq('id', id);
 
   if (error) {
-    return { success: false, error: error.message }
+    return { success: false, error: error.message };
   }
 
-  return { success: true }
+  return { success: true };
 }
 
-export async function updateFuelEuCertificate(id: string, data: Partial<FuelEuMaritimeCertificateData>): Promise<UpdateResult> {
-  const supabase = await createClient()
+export async function updateFuelEuCertificate(
+  id: string,
+  data: Partial<FuelEuMaritimeCertificateData>,
+): Promise<UpdateResult> {
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from('fueleu_maritime_certificates')
     .update(data)
-    .eq('id', id)
+    .eq('id', id);
 
   if (error) {
-    return { success: false, error: error.message }
+    return { success: false, error: error.message };
   }
 
-  return { success: true }
+  return { success: true };
 }
