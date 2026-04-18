@@ -15,7 +15,7 @@ import Avatar from '@mui/material/Avatar'
 import Chip from '@mui/material/Chip'
 import Grid from '@mui/material/Grid'
 import Divider from '@mui/material/Divider'
-import LinearProgress from '@mui/material/LinearProgress'
+import PortfolioPieChart from './PortfolioPieChart'
 
 export default async function SourcesPage() {
   const supabase = await createClient()
@@ -153,6 +153,30 @@ export default async function SourcesPage() {
           </Grid>
         </Grid>
 
+        {/* Portfolio Distribution Pie Chart */}
+        {totalCertificates > 0 && (
+          <Card sx={{ bgcolor: 'background.paper', mb: 4 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 600, mb: 3 }}>
+                Portfolio Distribution
+              </Typography>
+              <PortfolioPieChart
+                data={[
+                  ...(hbeStats && hbeStats.totalCertificates > 0
+                    ? [{ name: 'HBE', value: hbeStats.totalCertificates, color: '#4ade80' }]
+                    : []),
+                  ...(safStats && safStats.totalCertificates > 0
+                    ? [{ name: 'SAF', value: safStats.totalCertificates, color: '#60a5fa' }]
+                    : []),
+                  ...(fuelEuStats && fuelEuStats.totalCertificates > 0
+                    ? [{ name: 'FuelEU Maritime', value: fuelEuStats.totalCertificates, color: '#22d3ee' }]
+                    : []),
+                ]}
+              />
+            </CardContent>
+          </Card>
+        )}
+
         {/* HBE Source Card */}
         {hbeStats && hbeStats.totalCertificates > 0 && (
           <Card sx={{ bgcolor: 'background.paper', mb: 3 }}>
@@ -224,26 +248,6 @@ export default async function SourcesPage() {
                 </Grid>
               </Grid>
 
-              <Box sx={{ mt: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Portfolio share
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
-                    {totalCertificates > 0 ? Math.round((hbeStats.totalCertificates / totalCertificates) * 100) : 0}%
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={totalCertificates > 0 ? (hbeStats.totalCertificates / totalCertificates) * 100 : 0}
-                  sx={{
-                    height: 8,
-                    borderRadius: 4,
-                    bgcolor: 'rgba(74, 222, 128, 0.1)',
-                    '& .MuiLinearProgress-bar': { bgcolor: '#4ade80', borderRadius: 4 }
-                  }}
-                />
-              </Box>
             </CardContent>
           </Card>
         )}
@@ -327,26 +331,6 @@ export default async function SourcesPage() {
                 </Grid>
               </Grid>
 
-              <Box sx={{ mt: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Portfolio share
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
-                    {totalCertificates > 0 ? Math.round((safStats.totalCertificates / totalCertificates) * 100) : 0}%
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={totalCertificates > 0 ? (safStats.totalCertificates / totalCertificates) * 100 : 0}
-                  sx={{
-                    height: 8,
-                    borderRadius: 4,
-                    bgcolor: 'rgba(96, 165, 250, 0.1)',
-                    '& .MuiLinearProgress-bar': { bgcolor: '#60a5fa', borderRadius: 4 }
-                  }}
-                />
-              </Box>
             </CardContent>
           </Card>
         )}
@@ -438,26 +422,6 @@ export default async function SourcesPage() {
                 </Grid>
               </Grid>
 
-              <Box sx={{ mt: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Portfolio share
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
-                    {totalCertificates > 0 ? Math.round((fuelEuStats.totalCertificates / totalCertificates) * 100) : 0}%
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={totalCertificates > 0 ? (fuelEuStats.totalCertificates / totalCertificates) * 100 : 0}
-                  sx={{
-                    height: 8,
-                    borderRadius: 4,
-                    bgcolor: 'rgba(34, 211, 238, 0.1)',
-                    '& .MuiLinearProgress-bar': { bgcolor: '#22d3ee', borderRadius: 4 }
-                  }}
-                />
-              </Box>
             </CardContent>
           </Card>
         )}
