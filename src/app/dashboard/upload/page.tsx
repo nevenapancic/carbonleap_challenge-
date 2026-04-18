@@ -53,14 +53,16 @@ export default async function UploadPage() {
 
             <Box sx={{ display: 'flex', gap: 4, flexGrow: 1 }}>
               <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-                <Typography sx={{ color: 'text.secondary' }}>Portfolio</Typography>
+                <Typography sx={{ color: 'text.secondary' }}>Dashboard</Typography>
               </Link>
               <Link href="/dashboard/uploads" style={{ textDecoration: 'none' }}>
                 <Typography sx={{ color: 'text.primary', fontWeight: 500 }}>
                   Uploads
                 </Typography>
               </Link>
-              <Typography sx={{ color: 'text.secondary' }}>Sources</Typography>
+              <Link href="/dashboard/sources" style={{ textDecoration: 'none' }}>
+                <Typography sx={{ color: 'text.secondary' }}>Sources</Typography>
+              </Link>
               <Link href="/dashboard/settings" style={{ textDecoration: 'none' }}>
                 <Typography sx={{ color: 'text.secondary' }}>Settings</Typography>
               </Link>
@@ -73,7 +75,7 @@ export default async function UploadPage() {
         </Container>
       </Box>
 
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600, mb: 1 }}>
             Upload certificates

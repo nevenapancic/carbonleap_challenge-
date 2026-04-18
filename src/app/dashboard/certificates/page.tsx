@@ -71,23 +71,25 @@ export default async function CertificatesPage() {
           <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
             <Typography
               variant="h6"
-              sx={{ fontWeight: 600, color: 'white', mr: 6 }}
+              sx={{ fontWeight: 600, color: 'text.primary', mr: 6 }}
             >
               Carbon<span style={{ color: '#4ade80' }}>Leap</span>
             </Typography>
 
             <Box sx={{ display: 'flex', gap: 4, flexGrow: 1 }}>
               <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-                <Typography sx={{ color: 'white', fontWeight: 500 }}>
+                <Typography sx={{ color: 'text.primary', fontWeight: 500 }}>
                   Portfolio
                 </Typography>
               </Link>
               <Link href="/dashboard/uploads" style={{ textDecoration: 'none' }}>
-                <Typography sx={{ color: 'grey.500' }}>Uploads</Typography>
+                <Typography sx={{ color: 'text.secondary' }}>Uploads</Typography>
               </Link>
-              <Typography sx={{ color: 'grey.500' }}>Sources</Typography>
+              <Link href="/dashboard/sources" style={{ textDecoration: 'none' }}>
+                <Typography sx={{ color: 'text.secondary' }}>Sources</Typography>
+              </Link>
               <Link href="/dashboard/settings" style={{ textDecoration: 'none' }}>
-                <Typography sx={{ color: 'grey.500' }}>Settings</Typography>
+                <Typography sx={{ color: 'text.secondary' }}>Settings</Typography>
               </Link>
             </Box>
 
