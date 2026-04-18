@@ -286,7 +286,6 @@ export default function SafCertificatesTable({
     }
   };
 
-   Only hide the entire component if there are no certificates initially and no search is active
   if (
     certificates.length === 0 &&
     !isPending &&
