@@ -23,7 +23,8 @@ export async function getPaginatedCertificates(
   page: number,
   perPage: number,
   sortColumn?: string | null,
-  sortDirection?: 'asc' | 'desc'
+  sortDirection?: 'asc' | 'desc',
+  search?: string
 ): Promise<PaginatedCertificatesResult> {
   const supabase = await createClient()
 
@@ -32,6 +33,24 @@ export async function getPaginatedCertificates(
     .select('*', { count: 'exact' })
     .eq('company_id', companyId)
     .eq('source_id', sourceId)
+
+  // Apply search filter across text and numeric columns
+  if (search && search.trim()) {
+    const searchTerm = `%${search.trim()}%`
+    // Check if search term is a number (remove commas first)
+    const cleanedNumber = search.replace(/,/g, '').trim()
+    const numericValue = Number(cleanedNumber)
+    const isNumeric = !isNaN(numericValue) && cleanedNumber !== ''
+
+    let orConditions = `certificate_id.ilike.${searchTerm},hbe_type.ilike.${searchTerm},feedstock.ilike.${searchTerm},nta8003_code.ilike.${searchTerm},production_country.ilike.${searchTerm},sustainability_scheme.ilike.${searchTerm},pos_number.ilike.${searchTerm},transport_sector.ilike.${searchTerm},supplier_name.ilike.${searchTerm},rev_account_id.ilike.${searchTerm},verification_status.ilike.${searchTerm}`
+
+    // Add numeric field searches if the search term is a number
+    if (isNumeric) {
+      orConditions += `,energy_delivered_gj.eq.${numericValue},hbes_issued.eq.${numericValue},ghg_reduction_percentage.eq.${numericValue},multiplier.eq.${numericValue}`
+    }
+
+    query = query.or(orConditions)
+  }
 
   if (sortColumn) {
     query = query.order(sortColumn, { ascending: sortDirection === 'asc' })
@@ -95,7 +114,8 @@ export async function getPaginatedSafCertificates(
   page: number,
   perPage: number,
   sortColumn?: string | null,
-  sortDirection?: 'asc' | 'desc'
+  sortDirection?: 'asc' | 'desc',
+  search?: string
 ): Promise<PaginatedSafCertificatesResult> {
   const supabase = await createClient()
 
@@ -104,6 +124,24 @@ export async function getPaginatedSafCertificates(
     .select('*', { count: 'exact' })
     .eq('company_id', companyId)
     .eq('source_id', sourceId)
+
+  // Apply search filter across text and numeric columns
+  if (search && search.trim()) {
+    const searchTerm = `%${search.trim()}%`
+    // Check if search term is a number (remove commas first)
+    const cleanedNumber = search.replace(/,/g, '').trim()
+    const numericValue = Number(cleanedNumber)
+    const isNumeric = !isNaN(numericValue) && cleanedNumber !== ''
+
+    let orConditions = `certificate_id.ilike.${searchTerm},batch_id.ilike.${searchTerm},pos_number.ilike.${searchTerm},feedstock_type.ilike.${searchTerm},feedstock_country.ilike.${searchTerm},production_pathway.ilike.${searchTerm},producer_name.ilike.${searchTerm},production_country.ilike.${searchTerm},certification_scheme.ilike.${searchTerm},airline_name.ilike.${searchTerm},destination_airport.ilike.${searchTerm},supplier_name.ilike.${searchTerm},verification_status.ilike.${searchTerm}`
+
+    // Add numeric field searches if the search term is a number
+    if (isNumeric) {
+      orConditions += `,volume_liters.eq.${numericValue},volume_mt.eq.${numericValue},ghg_reduction_percentage.eq.${numericValue}`
+    }
+
+    query = query.or(orConditions)
+  }
 
   if (sortColumn) {
     query = query.order(sortColumn, { ascending: sortDirection === 'asc' })
@@ -172,7 +210,8 @@ export async function getPaginatedFuelEuCertificates(
   page: number,
   perPage: number,
   sortColumn?: string | null,
-  sortDirection?: 'asc' | 'desc'
+  sortDirection?: 'asc' | 'desc',
+  search?: string
 ): Promise<PaginatedFuelEuCertificatesResult> {
   const supabase = await createClient()
 
@@ -181,6 +220,24 @@ export async function getPaginatedFuelEuCertificates(
     .select('*', { count: 'exact' })
     .eq('company_id', companyId)
     .eq('source_id', sourceId)
+
+  // Apply search filter across text and numeric columns
+  if (search && search.trim()) {
+    const searchTerm = `%${search.trim()}%`
+    // Check if search term is a number (remove commas first)
+    const cleanedNumber = search.replace(/,/g, '').trim()
+    const numericValue = Number(cleanedNumber)
+    const isNumeric = !isNaN(numericValue) && cleanedNumber !== ''
+
+    let orConditions = `certificate_id.ilike.${searchTerm},imo_number.ilike.${searchTerm},ship_name.ilike.${searchTerm},ship_type.ilike.${searchTerm},flag_state.ilike.${searchTerm},shipowner_company.ilike.${searchTerm},voyage_id.ilike.${searchTerm},port_of_departure.ilike.${searchTerm},port_of_arrival.ilike.${searchTerm},voyage_type.ilike.${searchTerm},fuel_type.ilike.${searchTerm},fuel_category.ilike.${searchTerm},compliance_status.ilike.${searchTerm},certification_scheme.ilike.${searchTerm},pos_number.ilike.${searchTerm},feedstock_type.ilike.${searchTerm},verifier_name.ilike.${searchTerm},verification_status.ilike.${searchTerm},reporting_period.ilike.${searchTerm}`
+
+    // Add numeric field searches if the search term is a number
+    if (isNumeric) {
+      orConditions += `,gross_tonnage.eq.${numericValue},total_fuel_consumption_mt.eq.${numericValue}`
+    }
+
+    query = query.or(orConditions)
+  }
 
   if (sortColumn) {
     query = query.order(sortColumn, { ascending: sortDirection === 'asc' })

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useMemo } from 'react'
+import { useState, useTransition, useMemo, useCallback, useEffect, useRef } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
@@ -15,10 +15,14 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import CircularProgress from '@mui/material/CircularProgress'
 import IconButton from '@mui/material/IconButton'
+import TextField from '@mui/material/TextField'
+import InputAdornment from '@mui/material/InputAdornment'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
+import SearchIcon from '@mui/icons-material/Search'
+import ClearIcon from '@mui/icons-material/Clear'
 import type { SafCertificateData } from '@/lib/types/database'
 import { getPaginatedSafCertificates, deleteSafCertificate, updateSafCertificate } from './actions'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
@@ -93,6 +97,30 @@ export default function SafCertificatesTable({
   const [isSaving, setIsSaving] = useState(false)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [searchInput, setSearchInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Debounced search
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchInput(value)
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    debounceRef.current = setTimeout(() => {
+      setSearchQuery(value)
+    }, 300)
+  }, [])
+
+  // Trigger search when searchQuery changes
+  useEffect(() => {
+    fetchPage(1, perPage, sortColumn, sortDirection, searchQuery)
+  }, [searchQuery])
+
+  const clearSearch = () => {
+    setSearchInput('')
+    setSearchQuery('')
+  }
 
   // Calculate which optional columns have at least one value
   const visibleOptionalColumns = useMemo(() => {
@@ -117,7 +145,7 @@ export default function SafCertificatesTable({
     const newDirection = sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc'
     setSortColumn(column)
     setSortDirection(newDirection)
-    fetchPage(1, perPage, column, newDirection)
+    fetchPage(1, perPage, column, newDirection, searchQuery)
   }
 
   const SortableHeader = ({ column, label }: { column: string; label: string }) => {
@@ -145,11 +173,12 @@ export default function SafCertificatesTable({
     )
   }
 
-  const fetchPage = (page: number, itemsPerPage: number, sortCol?: string | null, sortDir?: 'asc' | 'desc') => {
+  const fetchPage = (page: number, itemsPerPage: number, sortCol?: string | null, sortDir?: 'asc' | 'desc', search?: string) => {
     const col = sortCol !== undefined ? sortCol : sortColumn
     const dir = sortDir !== undefined ? sortDir : sortDirection
+    const searchTerm = search !== undefined ? search : searchQuery
     startTransition(async () => {
-      const result = await getPaginatedSafCertificates(sourceId, companyId, page, itemsPerPage, col, dir)
+      const result = await getPaginatedSafCertificates(sourceId, companyId, page, itemsPerPage, col, dir, searchTerm)
       setCertificates(result.certificates)
       setTotalCount(result.totalCount)
       setTotalPages(result.totalPages)
@@ -195,8 +224,10 @@ export default function SafCertificatesTable({
     }
   }
 
-  if (certificates.length === 0 && !isPending) return null
+  // Only hide the entire component if there are no certificates initially and no search is active
+  if (certificates.length === 0 && !isPending && !searchQuery && initialTotalCount === 0) return null
 
+  const hasNoResults = certificates.length === 0 && !isPending
   const startItem = (currentPage - 1) * perPage + 1
   const endItem = Math.min(currentPage * perPage, totalCount)
   const cellSx = { color: 'grey.300', borderColor: 'divider', whiteSpace: 'nowrap', fontSize: '0.8rem' }
@@ -208,12 +239,59 @@ export default function SafCertificatesTable({
 
   return (
     <Box sx={{ position: 'relative' }}>
+      {/* Search Input */}
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          size="small"
+          placeholder="Search certificates..."
+          value={searchInput}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          sx={{
+            width: 250,
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'background.paper',
+              '& fieldset': { borderColor: 'divider' },
+              '&:hover fieldset': { borderColor: 'grey.600' },
+              '&.Mui-focused fieldset': { borderColor: '#60a5fa' },
+            },
+            '& .MuiInputBase-input': {
+              color: 'white',
+              fontSize: '0.875rem',
+              '&::placeholder': { color: 'grey.500', opacity: 1 },
+            },
+          }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: 'grey.500', fontSize: 20 }} />
+                </InputAdornment>
+              ),
+              endAdornment: searchInput ? (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={clearSearch} sx={{ color: 'grey.500' }}>
+                    <ClearIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            },
+          }}
+        />
+      </Box>
+
       {isPending && (
         <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, bgcolor: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: 1 }}>
           <CircularProgress sx={{ color: '#60a5fa' }} />
         </Box>
       )}
 
+      {hasNoResults ? (
+        <Box sx={{ py: 4, textAlign: 'center' }}>
+          <Typography sx={{ color: 'grey.500' }}>
+            No certificates found{searchQuery ? ` for "${searchQuery}"` : ''}
+          </Typography>
+        </Box>
+      ) : (
       <TableContainer sx={{ '&::-webkit-scrollbar': { height: 8 }, '&::-webkit-scrollbar-track': { bgcolor: 'transparent' }, '&::-webkit-scrollbar-thumb': { bgcolor: 'grey.800', borderRadius: 4 }, '&::-webkit-scrollbar-thumb:hover': { bgcolor: 'grey.700' } }}>
         <Table size="small">
           <TableHead>
@@ -324,6 +402,7 @@ export default function SafCertificatesTable({
           </TableBody>
         </Table>
       </TableContainer>
+      )}
 
       {totalCount > 0 && (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
