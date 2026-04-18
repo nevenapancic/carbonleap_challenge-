@@ -59,22 +59,24 @@ export default async function UploadsPage() {
           <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
             <Typography
               variant="h6"
-              sx={{ fontWeight: 600, color: 'white', mr: 6 }}
+              sx={{ fontWeight: 600, color: 'text.primary', mr: 6 }}
             >
               Carbon<span style={{ color: '#4ade80' }}>Leap</span>
             </Typography>
 
             <Box sx={{ display: 'flex', gap: 4, flexGrow: 1 }}>
               <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-                <Typography sx={{ color: 'grey.500' }}>Portfolio</Typography>
+                <Typography sx={{ color: 'text.secondary' }}>Portfolio</Typography>
               </Link>
               <Link href="/dashboard/uploads" style={{ textDecoration: 'none' }}>
-                <Typography sx={{ color: 'white', fontWeight: 500 }}>
+                <Typography sx={{ color: 'text.primary', fontWeight: 500 }}>
                   Uploads
                 </Typography>
               </Link>
-              <Typography sx={{ color: 'grey.500' }}>Sources</Typography>
-              <Typography sx={{ color: 'grey.500' }}>Settings</Typography>
+              <Typography sx={{ color: 'text.secondary' }}>Sources</Typography>
+              <Link href="/dashboard/settings" style={{ textDecoration: 'none' }}>
+                <Typography sx={{ color: 'text.secondary' }}>Settings</Typography>
+              </Link>
             </Box>
 
             <Avatar sx={{ bgcolor: '#4ade80', color: 'black', fontWeight: 600 }}>
@@ -87,10 +89,10 @@ export default async function UploadsPage() {
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Box>
-            <Typography variant="h4" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
+            <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600, mb: 1 }}>
               Upload history
             </Typography>
-            <Typography sx={{ color: 'grey.500' }}>
+            <Typography sx={{ color: 'text.secondary' }}>
               {uploads.length} uploads total
             </Typography>
           </Box>
@@ -98,9 +100,9 @@ export default async function UploadsPage() {
             <Button
               variant="outlined"
               sx={{
-                borderColor: 'grey.700',
-                color: 'white',
-                '&:hover': { borderColor: 'grey.500' },
+                borderColor: 'divider',
+                color: 'text.primary',
+                '&:hover': { borderColor: 'text.secondary' },
               }}
             >
               + Upload certificates
@@ -110,7 +112,7 @@ export default async function UploadsPage() {
 
         {uploads.length === 0 ? (
           <Card sx={{ bgcolor: 'background.paper', p: 6, textAlign: 'center' }}>
-            <Typography sx={{ color: 'grey.500', mb: 2 }}>
+            <Typography sx={{ color: 'text.secondary', mb: 2 }}>
               No uploads yet
             </Typography>
             <Link href="/dashboard/upload">
@@ -125,18 +127,18 @@ export default async function UploadsPage() {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>File name</TableCell>
-                    <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Source</TableCell>
-                    <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Certificates</TableCell>
-                    <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Status</TableCell>
-                    <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Uploaded</TableCell>
-                    <TableCell sx={{ color: 'grey.500', borderColor: 'divider' }}>Download</TableCell>
+                    <TableCell sx={{ color: 'text.secondary', borderColor: 'divider' }}>File name</TableCell>
+                    <TableCell sx={{ color: 'text.secondary', borderColor: 'divider' }}>Source</TableCell>
+                    <TableCell sx={{ color: 'text.secondary', borderColor: 'divider' }}>Certificates</TableCell>
+                    <TableCell sx={{ color: 'text.secondary', borderColor: 'divider' }}>Status</TableCell>
+                    <TableCell sx={{ color: 'text.secondary', borderColor: 'divider' }}>Uploaded</TableCell>
+                    <TableCell sx={{ color: 'text.secondary', borderColor: 'divider' }}>Download</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {uploads.map((upload) => (
                     <TableRow key={upload.id}>
-                      <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                      <TableCell sx={{ color: 'text.primary', borderColor: 'divider' }}>
                         {upload.filename}
                       </TableCell>
                       <TableCell sx={{ borderColor: 'divider' }}>
@@ -150,7 +152,7 @@ export default async function UploadsPage() {
                           }}
                         />
                       </TableCell>
-                      <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                      <TableCell sx={{ color: 'text.primary', borderColor: 'divider' }}>
                         {upload.certificateCount}
                       </TableCell>
                       <TableCell sx={{ borderColor: 'divider' }}>
@@ -178,7 +180,7 @@ export default async function UploadsPage() {
                           }}
                         />
                       </TableCell>
-                      <TableCell sx={{ color: 'grey.400', borderColor: 'divider' }}>
+                      <TableCell sx={{ color: 'text.secondary', borderColor: 'divider' }}>
                         {new Date(upload.uploaded_at).toLocaleDateString('en-US', {
                           day: 'numeric',
                           month: 'short',

@@ -153,12 +153,12 @@ export default function SafCertificatesTable({
     return (
       <TableCell
         sx={{
-          color: 'grey.500',
+          color: 'text.secondary',
           borderColor: 'divider',
           whiteSpace: 'nowrap',
           cursor: 'pointer',
           userSelect: 'none',
-          '&:hover': { color: 'grey.300' },
+          '&:hover': { color: 'text.primary' },
         }}
         onClick={() => handleSort(column)}
       >
@@ -230,7 +230,7 @@ export default function SafCertificatesTable({
   const hasNoResults = certificates.length === 0 && !isPending
   const startItem = (currentPage - 1) * perPage + 1
   const endItem = Math.min(currentPage * perPage, totalCount)
-  const cellSx = { color: 'grey.300', borderColor: 'divider', whiteSpace: 'nowrap', fontSize: '0.8rem' }
+  const cellSx = { color: 'text.secondary', borderColor: 'divider', whiteSpace: 'nowrap', fontSize: '0.8rem' }
 
   const Cell = ({ column, children }: { column: string; children: React.ReactNode }) => {
     if (!isColumnVisible(column)) return null
@@ -255,9 +255,9 @@ export default function SafCertificatesTable({
               '&.Mui-focused fieldset': { borderColor: '#60a5fa' },
             },
             '& .MuiInputBase-input': {
-              color: 'white',
+              color: 'text.primary',
               fontSize: '0.875rem',
-              '&::placeholder': { color: 'grey.500', opacity: 1 },
+              '&::placeholder': { color: 'text.secondary', opacity: 1 },
             },
           }}
           slotProps={{
@@ -296,7 +296,7 @@ export default function SafCertificatesTable({
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap', width: 80, position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 1 }}>Actions</TableCell>
+              <TableCell sx={{ color: 'text.secondary', borderColor: 'divider', whiteSpace: 'nowrap', width: 80, position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 1 }}>Actions</TableCell>
               <SortableHeader column="certificate_id" label="Certificate ID" />
               <SortableHeader column="batch_id" label="Batch ID" />
               <SortableHeader column="pos_number" label="PoS Number" />
@@ -343,7 +343,7 @@ export default function SafCertificatesTable({
                     <IconButton size="small" onClick={() => handleEditClick(cert)} sx={{ color: '#60a5fa', '&:hover': { bgcolor: '#60a5fa20' } }}><EditIcon fontSize="small" /></IconButton>
                     <IconButton size="small" onClick={() => handleDeleteClick(cert)} sx={{ color: '#ef4444', '&:hover': { bgcolor: '#ef444420' } }}><DeleteIcon fontSize="small" /></IconButton>
                   </TableCell>
-                  <TableCell sx={{ ...cellSx, color: 'white' }}>{cert.certificate_id}</TableCell>
+                  <TableCell sx={{ ...cellSx, color: 'text.primary' }}>{cert.certificate_id}</TableCell>
                   <Cell column="batch_id">{cert.batch_id || '-'}</Cell>
                   <TableCell sx={{ ...cellSx, fontFamily: 'monospace', fontSize: '0.7rem' }}>{cert.pos_number}</TableCell>
                   <TableCell sx={cellSx}>{cert.volume_liters.toLocaleString()}</TableCell>
@@ -412,7 +412,7 @@ export default function SafCertificatesTable({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography sx={{ color: 'grey.500', fontSize: '0.875rem' }}>Per page:</Typography>
-              <Select value={perPage} onChange={(e) => handlePerPageChange(e.target.value as number)} size="small" variant="standard" disableUnderline disabled={isPending} sx={{ color: 'white', '.MuiSelect-select': { py: 0.5, px: 1 }, '.MuiSvgIcon-root': { color: 'grey.400' } }} MenuProps={{ slotProps: { paper: { sx: { bgcolor: 'background.paper' } } } }}>
+              <Select value={perPage} onChange={(e) => handlePerPageChange(e.target.value as number)} size="small" variant="standard" disableUnderline disabled={isPending} sx={{ color: 'text.primary', '.MuiSelect-select': { py: 0.5, px: 1 }, '.MuiSvgIcon-root': { color: 'text.secondary' } }} MenuProps={{ slotProps: { paper: { sx: { bgcolor: 'background.paper' } } } }}>
                 <MenuItem value={5}>5</MenuItem>
                 <MenuItem value={10}>10</MenuItem>
                 <MenuItem value={15}>15</MenuItem>

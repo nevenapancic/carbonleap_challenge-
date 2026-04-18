@@ -26,57 +26,57 @@ export default function FuelEuStatsDisplay({ sourceId, companyId, initialStats }
       }}
     >
       <Box>
-        <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
           Certificates
         </Typography>
-        <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+        <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600 }}>
           {stats.totalCertificates}
         </Typography>
-        <Typography variant="body2" sx={{ color: 'grey.500' }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           total records
         </Typography>
       </Box>
       <Box>
-        <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
           Total Fuel
         </Typography>
-        <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+        <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600 }}>
           {stats.totalFuelConsumptionMt.toLocaleString()}
         </Typography>
-        <Typography variant="body2" sx={{ color: 'grey.500' }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           Metric Tons
         </Typography>
       </Box>
       <Box>
-        <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
           Avg GHG Intensity
         </Typography>
-        <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+        <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600 }}>
           {stats.avgGhgIntensity}
         </Typography>
-        <Typography variant="body2" sx={{ color: 'grey.500' }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           gCO2eq/MJ
         </Typography>
       </Box>
       <Box>
-        <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
           Compliant
         </Typography>
-        <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+        <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600 }}>
           {stats.compliantCount}
         </Typography>
-        <Typography variant="body2" sx={{ color: 'grey.500' }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           certificates
         </Typography>
       </Box>
       <Box>
-        <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
           Unique Vessels
         </Typography>
-        <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+        <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600 }}>
           {stats.uniqueVessels}
         </Typography>
-        <Typography variant="body2" sx={{ color: 'grey.500' }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           IMO numbers
         </Typography>
       </Box>

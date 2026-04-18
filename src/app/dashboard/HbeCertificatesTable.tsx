@@ -135,12 +135,12 @@ export default function HbeCertificatesTable({
     return (
       <TableCell
         sx={{
-          color: 'grey.500',
+          color: 'text.secondary',
           borderColor: 'divider',
           whiteSpace: 'nowrap',
           cursor: 'pointer',
           userSelect: 'none',
-          '&:hover': { color: 'grey.300' },
+          '&:hover': { color: 'text.primary' },
         }}
         onClick={() => handleSort(column)}
       >
@@ -257,9 +257,9 @@ export default function HbeCertificatesTable({
               '&.Mui-focused fieldset': { borderColor: '#4ade80' },
             },
             '& .MuiInputBase-input': {
-              color: 'white',
+              color: 'text.primary',
               fontSize: '0.875rem',
-              '&::placeholder': { color: 'grey.500', opacity: 1 },
+              '&::placeholder': { color: 'text.secondary', opacity: 1 },
             },
           }}
           slotProps={{
@@ -319,7 +319,7 @@ export default function HbeCertificatesTable({
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell sx={{ color: 'grey.500', borderColor: 'divider', whiteSpace: 'nowrap', width: 80, position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 1 }}>Actions</TableCell>
+              <TableCell sx={{ color: 'text.secondary', borderColor: 'divider', whiteSpace: 'nowrap', width: 80, position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 1 }}>Actions</TableCell>
               <SortableHeader column="certificate_id" label="Certificate ID" />
               <SortableHeader column="hbe_type" label="Type" />
               <SortableHeader column="energy_delivered_gj" label="Energy (GJ)" />
@@ -353,7 +353,7 @@ export default function HbeCertificatesTable({
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
+                  <TableCell sx={{ color: 'text.primary', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {cert.certificate_id}
                   </TableCell>
                   <TableCell sx={{ borderColor: 'divider' }}>
@@ -368,10 +368,10 @@ export default function HbeCertificatesTable({
                       }}
                     />
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                  <TableCell sx={{ color: 'text.primary', borderColor: 'divider' }}>
                     {cert.energy_delivered_gj}
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                  <TableCell sx={{ color: 'text.primary', borderColor: 'divider' }}>
                     {cert.hbes_issued}
                   </TableCell>
                   <TableCell sx={{ borderColor: 'divider' }}>
@@ -396,16 +396,16 @@ export default function HbeCertificatesTable({
                       }}
                     />
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider' }}>
+                  <TableCell sx={{ color: 'text.primary', borderColor: 'divider' }}>
                     {cert.multiplier}x
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
+                  <TableCell sx={{ color: 'text.primary', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {cert.feedstock}
                   </TableCell>
-                  <TableCell sx={{ color: 'grey.400', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                  <TableCell sx={{ color: 'text.secondary', borderColor: 'divider', fontFamily: 'monospace', fontSize: '0.75rem' }}>
                     {cert.nta8003_code}
                   </TableCell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
+                  <TableCell sx={{ color: 'text.primary', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {cert.production_country}
                   </TableCell>
                   <TableCell sx={{ borderColor: 'divider' }}>
@@ -419,22 +419,22 @@ export default function HbeCertificatesTable({
                       }}
                     />
                   </TableCell>
-                  <Cell column="pos_number" sx={{ color: 'grey.400', fontFamily: 'monospace', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                  <Cell column="pos_number" sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
                     {cert.pos_number}
                   </Cell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
+                  <TableCell sx={{ color: 'text.primary', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {cert.delivery_date}
                   </TableCell>
-                  <Cell column="booking_date" sx={{ color: 'white', whiteSpace: 'nowrap' }}>
+                  <Cell column="booking_date" sx={{ color: 'text.primary', whiteSpace: 'nowrap' }}>
                     {cert.booking_date}
                   </Cell>
-                  <TableCell sx={{ color: 'white', borderColor: 'divider', whiteSpace: 'nowrap' }}>
+                  <TableCell sx={{ color: 'text.primary', borderColor: 'divider', whiteSpace: 'nowrap' }}>
                     {transportSectorLabels[cert.transport_sector] || cert.transport_sector}
                   </TableCell>
-                  <Cell column="supplier_name" sx={{ color: 'white', whiteSpace: 'nowrap' }}>
+                  <Cell column="supplier_name" sx={{ color: 'text.primary', whiteSpace: 'nowrap' }}>
                     {cert.supplier_name}
                   </Cell>
-                  <Cell column="rev_account_id" sx={{ color: 'grey.400', fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                  <Cell column="rev_account_id" sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.75rem' }}>
                     {cert.rev_account_id}
                   </Cell>
                   <TableCell sx={{ borderColor: 'divider' }}>
@@ -485,9 +485,9 @@ export default function HbeCertificatesTable({
                 disableUnderline
                 disabled={isPending}
                 sx={{
-                  color: 'white',
+                  color: 'text.primary',
                   '.MuiSelect-select': { py: 0.5, px: 1 },
-                  '.MuiSvgIcon-root': { color: 'grey.400' },
+                  '.MuiSvgIcon-root': { color: 'text.secondary' },
                 }}
                 MenuProps={{
                   slotProps: {

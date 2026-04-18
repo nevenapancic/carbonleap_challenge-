@@ -87,22 +87,24 @@ export default async function DashboardPage() {
           <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
             <Typography
               variant="h6"
-              sx={{ fontWeight: 600, color: 'white', mr: 6 }}
+              sx={{ fontWeight: 600, color: 'text.primary', mr: 6 }}
             >
               Carbon<span style={{ color: '#4ade80' }}>Leap</span>
             </Typography>
 
             <Box sx={{ display: 'flex', gap: 4, flexGrow: 1 }}>
               <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-                <Typography sx={{ color: 'white', fontWeight: 500 }}>
+                <Typography sx={{ color: 'text.primary', fontWeight: 500 }}>
                   Portfolio
                 </Typography>
               </Link>
               <Link href="/dashboard/uploads" style={{ textDecoration: 'none' }}>
-                <Typography sx={{ color: 'grey.500' }}>Uploads</Typography>
+                <Typography sx={{ color: 'text.secondary' }}>Uploads</Typography>
               </Link>
-              <Typography sx={{ color: 'grey.500' }}>Sources</Typography>
-              <Typography sx={{ color: 'grey.500' }}>Settings</Typography>
+              <Typography sx={{ color: 'text.secondary' }}>Sources</Typography>
+              <Link href="/dashboard/settings" style={{ textDecoration: 'none' }}>
+                <Typography sx={{ color: 'text.secondary' }}>Settings</Typography>
+              </Link>
             </Box>
 
             <Avatar sx={{ bgcolor: '#4ade80', color: 'black', fontWeight: 600 }}>
@@ -115,10 +117,10 @@ export default async function DashboardPage() {
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
           <Box>
-            <Typography variant="h4" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
+            <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600, mb: 1 }}>
               Your portfolio
             </Typography>
-            <Typography sx={{ color: 'grey.500' }}>
+            <Typography sx={{ color: 'text.secondary' }}>
               {company.name} · {sourcesWithStats.length} active sources
             </Typography>
           </Box>
@@ -126,9 +128,9 @@ export default async function DashboardPage() {
             <Button
               variant="outlined"
               sx={{
-                borderColor: 'grey.700',
-                color: 'white',
-                '&:hover': { borderColor: 'grey.500' },
+                borderColor: 'divider',
+                color: 'text.primary',
+                '&:hover': { borderColor: 'text.secondary' },
               }}
             >
               + Upload certificates
@@ -163,10 +165,10 @@ export default async function DashboardPage() {
                     }}
                   />
                   <Box>
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
+                    <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 600 }}>
                       HBE
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                       Dutch biofuel tickets · NEa Registry Netherlands
                     </Typography>
                   </Box>
@@ -221,10 +223,10 @@ export default async function DashboardPage() {
                     }}
                   />
                   <Box>
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
+                    <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 600 }}>
                       SAF
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                       Sustainable Aviation Fuel · ICAO CORSIA / EU RED
                     </Typography>
                   </Box>
@@ -280,10 +282,10 @@ export default async function DashboardPage() {
                     }}
                   />
                   <Box>
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
+                    <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 600 }}>
                       FuelEU Maritime
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                       EU Maritime Fuel Regulation · GHG Intensity Compliance
                     </Typography>
                   </Box>

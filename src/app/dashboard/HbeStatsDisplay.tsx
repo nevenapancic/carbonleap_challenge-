@@ -26,35 +26,35 @@ export default function HbeStatsDisplay({ sourceId, companyId, initialStats }: P
       }}
     >
       <Box>
-        <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
           Certificates
         </Typography>
-        <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+        <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600 }}>
           {stats.totalCertificates}
         </Typography>
-        <Typography variant="body2" sx={{ color: 'grey.500' }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           total records
         </Typography>
       </Box>
       <Box>
-        <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
           Total Energy
         </Typography>
-        <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+        <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600 }}>
           {stats.totalEnergyGj.toLocaleString()}
         </Typography>
-        <Typography variant="body2" sx={{ color: 'grey.500' }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           GJ
         </Typography>
       </Box>
       <Box>
-        <Typography variant="caption" sx={{ color: 'grey.500', textTransform: 'uppercase', letterSpacing: 1 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
           Latest Issue
         </Typography>
-        <Typography variant="h4" sx={{ color: 'white', fontWeight: 600 }}>
+        <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600 }}>
           {stats.latestDeliveryDate || 'N/A'}
         </Typography>
-        <Typography variant="body2" sx={{ color: 'grey.500' }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           DD/MM/YYYY format
         </Typography>
       </Box>

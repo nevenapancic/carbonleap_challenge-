@@ -46,22 +46,24 @@ export default async function UploadPage() {
           <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
             <Typography
               variant="h6"
-              sx={{ fontWeight: 600, color: 'white', mr: 6 }}
+              sx={{ fontWeight: 600, color: 'text.primary', mr: 6 }}
             >
               Carbon<span style={{ color: '#4ade80' }}>Leap</span>
             </Typography>
 
             <Box sx={{ display: 'flex', gap: 4, flexGrow: 1 }}>
               <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-                <Typography sx={{ color: 'grey.500' }}>Portfolio</Typography>
+                <Typography sx={{ color: 'text.secondary' }}>Portfolio</Typography>
               </Link>
               <Link href="/dashboard/uploads" style={{ textDecoration: 'none' }}>
-                <Typography sx={{ color: 'white', fontWeight: 500 }}>
+                <Typography sx={{ color: 'text.primary', fontWeight: 500 }}>
                   Uploads
                 </Typography>
               </Link>
-              <Typography sx={{ color: 'grey.500' }}>Sources</Typography>
-              <Typography sx={{ color: 'grey.500' }}>Settings</Typography>
+              <Typography sx={{ color: 'text.secondary' }}>Sources</Typography>
+              <Link href="/dashboard/settings" style={{ textDecoration: 'none' }}>
+                <Typography sx={{ color: 'text.secondary' }}>Settings</Typography>
+              </Link>
             </Box>
 
             <Avatar sx={{ bgcolor: '#4ade80', color: 'black', fontWeight: 600 }}>
@@ -73,10 +75,10 @@ export default async function UploadPage() {
 
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
+          <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 600, mb: 1 }}>
             Upload certificates
           </Typography>
-          <Typography sx={{ color: 'grey.500' }}>
+          <Typography sx={{ color: 'text.secondary' }}>
             Import certificate data from CSV files
           </Typography>
         </Box>

@@ -86,7 +86,9 @@ export default async function CertificatesPage() {
                 <Typography sx={{ color: 'grey.500' }}>Uploads</Typography>
               </Link>
               <Typography sx={{ color: 'grey.500' }}>Sources</Typography>
-              <Typography sx={{ color: 'grey.500' }}>Settings</Typography>
+              <Link href="/dashboard/settings" style={{ textDecoration: 'none' }}>
+                <Typography sx={{ color: 'grey.500' }}>Settings</Typography>
+              </Link>
             </Box>
 
             <Avatar sx={{ bgcolor: '#4ade80', color: 'black', fontWeight: 600 }}>
