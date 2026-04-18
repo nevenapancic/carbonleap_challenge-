@@ -1,8 +1,11 @@
+export type ThemeMode = 'light' | 'dark';
+
 export type Company = {
   id: string;
   name: string;
   email: string;
   created_at: string;
+  theme_mode: ThemeMode;
 };
 
 export type Source = {

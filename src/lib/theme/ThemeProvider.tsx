@@ -18,25 +18,27 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 export function useThemeMode() {
   const context = useContext(ThemeContext)
   if (!context) {
-    throw new Error('useThemeMode must be used within a ThemeProvider')
+    // Return default values when context is not available (SSR or outside provider)
+    return {
+      mode: 'dark' as const,
+      toggleTheme: () => {},
+      setMode: () => {},
+    }
   }
   return context
 }
 
 type Props = {
   children: React.ReactNode
+  initialTheme?: ThemeMode
 }
 
-export default function ThemeProvider({ children }: Props) {
-  const [mode, setModeState] = useState<ThemeMode>('dark')
+export default function ThemeProvider({ children, initialTheme = 'dark' }: Props) {
+  const [mode, setModeState] = useState<ThemeMode>(initialTheme)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    const savedMode = localStorage.getItem('theme-mode') as ThemeMode | null
-    if (savedMode && (savedMode === 'light' || savedMode === 'dark')) {
-      setModeState(savedMode)
-    }
   }, [])
 
   const setMode = (newMode: ThemeMode) => {

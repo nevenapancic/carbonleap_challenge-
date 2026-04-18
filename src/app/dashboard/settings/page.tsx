@@ -155,7 +155,7 @@ export default async function SettingsPage() {
             <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 600, mb: 3 }}>
               Appearance
             </Typography>
-            <ThemeToggle />
+            <ThemeToggle companyId={company.id} initialTheme={company.theme_mode || 'dark'} />
           </CardContent>
         </Card>
 
