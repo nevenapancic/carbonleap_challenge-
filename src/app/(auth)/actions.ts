@@ -29,6 +29,8 @@ export async function signup(formData: FormData) {
   const password = formData.get('password') as string
   const companyName = formData.get('companyName') as string
 
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || 'https://carbonleap-challenge.vercel.app'
+
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
@@ -36,6 +38,7 @@ export async function signup(formData: FormData) {
       data: {
         company_name: companyName,
       },
+      emailRedirectTo: `${origin}/auth/callback`,
     },
   })
 
