@@ -75,7 +75,6 @@ export default function HbeCertificatesTable({
   const [searchQuery, setSearchQuery] = useState('')
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Debounced search
   const handleSearchChange = useCallback((value: string) => {
     setSearchInput(value)
     if (debounceRef.current) {
@@ -86,7 +85,6 @@ export default function HbeCertificatesTable({
     }, 300)
   }, [])
 
-  // Trigger search when searchQuery changes
   useEffect(() => {
     fetchPage(1, perPage, sortColumn, sortDirection, searchQuery)
   }, [searchQuery])
@@ -96,7 +94,6 @@ export default function HbeCertificatesTable({
     setSearchQuery('')
   }
 
-  // Optional columns that should be hidden if all values are empty
   const optionalColumns = [
     'pos_number',
     'booking_date',
@@ -104,7 +101,6 @@ export default function HbeCertificatesTable({
     'rev_account_id',
   ] as const
 
-  // Calculate which optional columns have data
   const visibleOptionalColumns = useMemo(() => {
     const visible = new Set<string>()
     for (const cert of certificates) {
@@ -167,7 +163,6 @@ export default function HbeCertificatesTable({
     )
   }
 
-  // Cell component that conditionally renders based on column visibility
   const Cell = ({ column, children, sx: cellSx }: { column: string; children: React.ReactNode; sx?: object }) => {
     if (!isColumnVisible(column)) return null
     return <TableCell sx={{ borderColor: 'divider', ...cellSx }}>{children}</TableCell>
@@ -229,7 +224,6 @@ export default function HbeCertificatesTable({
     }
   }
 
-  // Only hide the entire component if there are no certificates initially and no search is active
   if (certificates.length === 0 && !isPending && !searchQuery && initialTotalCount === 0) {
     return null
   }

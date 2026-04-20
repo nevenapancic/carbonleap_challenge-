@@ -26,7 +26,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // Try to get user's theme preference from database
   let initialTheme: 'light' | 'dark' = 'dark'
 
   try {
@@ -40,7 +39,6 @@ export default async function RootLayout({
       }
     }
   } catch {
-    // Silently fail - use default theme
   }
 
   return (

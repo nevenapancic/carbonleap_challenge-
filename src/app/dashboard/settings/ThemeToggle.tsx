@@ -23,10 +23,8 @@ export default function ThemeToggle({ companyId, initialTheme }: Props) {
   const handleToggle = () => {
     const newMode: ThemeMode = currentMode === 'dark' ? 'light' : 'dark'
 
-    // Update local state immediately
     setMode(newMode)
-
-    // Save to database
+    
     startTransition(async () => {
       await updateThemeMode(companyId, newMode)
     })

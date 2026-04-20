@@ -72,7 +72,6 @@ const voyageTypeLabels: Record<string, { label: string; color: string }> = {
   'outermost_region': { label: 'Outermost', color: '#34d399' },
 }
 
-// Define all optional columns that can be hidden
 const optionalColumns = [
   'voyage_id', 'distance_nm', 'time_at_sea_hours', 'time_at_berth_hours',
   'fuel_consumption_sea_mt', 'fuel_consumption_berth_mt', 'lower_calorific_value_mj_kg',
@@ -116,7 +115,6 @@ export default function FuelEuCertificatesTable({
   const [searchQuery, setSearchQuery] = useState('')
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Debounced search
   const handleSearchChange = useCallback((value: string) => {
     setSearchInput(value)
     if (debounceRef.current) {
@@ -127,7 +125,6 @@ export default function FuelEuCertificatesTable({
     }, 300)
   }, [])
 
-  // Trigger search when searchQuery changes
   useEffect(() => {
     fetchPage(1, perPage, sortColumn, sortDirection, searchQuery)
   }, [searchQuery])
@@ -137,7 +134,6 @@ export default function FuelEuCertificatesTable({
     setSearchQuery('')
   }
 
-  // Calculate which optional columns have at least one value
   const visibleOptionalColumns = useMemo(() => {
     const visible = new Set<string>()
     for (const cert of certificates) {
@@ -239,7 +235,6 @@ export default function FuelEuCertificatesTable({
     }
   }
 
-  // Only hide the entire component if there are no certificates initially and no search is active
   if (certificates.length === 0 && !isPending && !searchQuery && initialTotalCount === 0) return null
 
   const hasNoResults = certificates.length === 0 && !isPending

@@ -153,8 +153,8 @@ src/
          │                         │                └────────┬────────┘
          │                         │                         │
          ▼                         ▼                         ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                         Certificate Tables                           │
+┌────────────────────────────────────────────────────────────────────┐
+│                         Certificate Tables                         │
 ├─────────────────────┬──────────────────────┬───────────────────────┤
 │   hbe_certificates  │   saf_certificates   │ fueleu_maritime_certs │
 ├─────────────────────┼──────────────────────┼───────────────────────┤
@@ -163,10 +163,10 @@ src/
 │ source_id (FK)      │ source_id (FK)       │ source_id (FK)        │
 │ upload_id (FK)      │ upload_id (FK)       │ upload_id (FK)        │
 │ certificate_id      │ certificate_id       │ certificate_id        │
-│ hbe_type           │ pos_number           │ imo_number            │
+│ hbe_type            │ pos_number           │ imo_number            │
 │ energy_delivered_gj │ volume_liters        │ ship_name             │
-│ feedstock          │ feedstock_type       │ fuel_type             │
-│ ...17 fields       │ ...30 fields         │ ...45 fields          │
+│ feedstock           │ feedstock_type       │ fuel_type             │
+│ ...17 fields        │ ...30 fields         │ ...45 fields          │
 └─────────────────────┴──────────────────────┴───────────────────────┘
 ```
 
@@ -231,7 +231,7 @@ Key fields:
 
 ### Row Level Security (RLS)
 
-All tables have Row Level Security enabled to ensure data isolation between companies:
+All tables have Row Level Security enabled to ensure data isolation between companies(companies can see only their data):
 
 ```sql
 ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
@@ -247,7 +247,7 @@ ALTER TABLE fueleu_maritime_certificates ENABLE ROW LEVEL SECURITY;
 
 ### 1. Dashboard Overview
 - **Tabbed interface** for switching between HBE, SAF, and FuelEU Maritime certificates
-- **Real-time statistics cards** showing:
+- **Real-time(PUBSUB) statistics cards** showing:
   - HBE: Total certificates, total energy (GJ), latest delivery date
   - SAF: Total certificates, total volume (MT), avg GHG reduction, CORSIA eligible count
   - FuelEU: Total certificates, fuel consumption (MT), avg GHG intensity, compliant count, unique vessels
@@ -280,7 +280,7 @@ ALTER TABLE fueleu_maritime_certificates ENABLE ROW LEVEL SECURITY;
 - **Account sign-out** functionality
 
 ### 6. Authentication
-- **Email/password registration** with email confirmation
+- **Email/password registration** with email confirmation (keep in mind supabase limit since I dont have payed version)
 - **Secure login** with session management
 - **Protected routes** via middleware
 - **OAuth callback** handling
@@ -292,6 +292,7 @@ ALTER TABLE fueleu_maritime_certificates ENABLE ROW LEVEL SECURITY;
 ### Current Implementation
 
 The search feature performs **case-insensitive partial matching** across specific text columns using PostgreSQL's `ILIKE` operator.
+This feature can be upgraded with newer versions of the app, but for demo purposes I enabled it for just couple of columns. 
 
 ### Searchable Columns by Certificate Type
 
@@ -417,17 +418,6 @@ if (rawSearch) {
 4. **Row Level Security** - Database-level data isolation
 5. **Server Actions** - Sensitive operations run server-side only
 6. **Environment variables** - Secrets stored securely
-
-### Middleware Implementation
-
-```typescript
-// Protects all routes except static assets
-export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
-}
-```
 
 ---
 
@@ -665,70 +655,15 @@ Update `src/app/dashboard/page.tsx` to include the new tab.
 #### Step 8: Upload Template
 Add field mappings in `src/lib/parsers/templates.ts`.
 
-**Time estimate**: With the existing infrastructure, a new certificate type can be added in approximately 2-4 hours of development time.
+**Time estimate**: With the existing infrastructure, a new certificate type can be added in approximately 4ish hours of development time.
 
 ### 3. Additional Planned Enhancements
 
-- **Full-text search** using PostgreSQL tsvector for better search capabilities
-- **Advanced filtering** with date ranges, numeric ranges, and multi-select filters
-- **Export functionality** to CSV/Excel for all certificate tables
-- **Bulk operations** for editing/deleting multiple certificates
+- **Full-text search** upgrade it so that it can search through all the columns
 - **Audit logging** for compliance tracking
-- **API rate limiting** and request throttling
 - **Two-factor authentication** (2FA)
 - **Webhook integrations** for external systems
 - **Mobile-responsive** design improvements
 - **Certificate analytics** dashboard with trends and forecasting
 
 ---
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js >= 20.9.0
-- Yarn package manager
-- Supabase account
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/carbonleap.git
-cd carbonleap
-
-# Install dependencies
-yarn install
-
-# Set up environment variables
-cp .env.example .env.local
-
-# Add your Supabase credentials to .env.local
-# NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-# NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-# SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-
-# Run development server
-yarn dev
-```
-
-### Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `yarn dev` | Start development server |
-| `yarn build` | Build for production |
-| `yarn start` | Start production server |
-| `yarn lint` | Run ESLint |
-
----
-
-## Contact
-
-For questions about this technical challenge submission, please contact the developer.
-
----
-
-*Document generated for technical case submission*
-*Version: 1.0*
-*Date: April 2026*

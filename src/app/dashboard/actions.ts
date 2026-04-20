@@ -43,23 +43,10 @@ export async function getPaginatedCertificates(
     .eq('company_id', companyId)
     .eq('source_id', sourceId);
 
-  // Apply search filter - search text columns with case-insensitive matching
   if (rawSearch) {
     const likeTerm = `%${cleanedSearch}%`;
     query = query.or(
-      [
-        `certificate_id.ilike.${likeTerm}`,
-        `hbe_type.ilike.${likeTerm}`,
-        `feedstock.ilike.${likeTerm}`,
-        `nta8003_code.ilike.${likeTerm}`,
-        `production_country.ilike.${likeTerm}`,
-        `sustainability_scheme.ilike.${likeTerm}`,
-        `pos_number.ilike.${likeTerm}`,
-        `transport_sector.ilike.${likeTerm}`,
-        `supplier_name.ilike.${likeTerm}`,
-        `rev_account_id.ilike.${likeTerm}`,
-        `verification_status.ilike.${likeTerm}`,
-      ].join(','),
+      `certificate_id.ilike.${likeTerm},hbe_type.ilike.${likeTerm},feedstock.ilike.${likeTerm},nta8003_code.ilike.${likeTerm},production_country.ilike.${likeTerm},sustainability_scheme.ilike.${likeTerm},pos_number.ilike.${likeTerm},transport_sector.ilike.${likeTerm},supplier_name.ilike.${likeTerm},rev_account_id.ilike.${likeTerm},verification_status.ilike.${likeTerm},delivery_date::text.ilike.${likeTerm},booking_date::text.ilike.${likeTerm},energy_delivered_gj::text.ilike.${likeTerm},hbes_issued::text.ilike.${likeTerm},ghg_reduction_percentage::text.ilike.${likeTerm},multiplier::text.ilike.${likeTerm}`,
     );
   }
 
@@ -106,7 +93,6 @@ export async function getPaginatedCertificates(
   return { certificates, totalCount, totalPages };
 }
 
-// SAF Certificates Pagination
 export type PaginatedSafCertificatesResult = {
   certificates: (SafCertificateData & { id: string })[];
   totalCount: number;
@@ -142,32 +128,10 @@ export async function getPaginatedSafCertificates(
     .eq('company_id', companyId)
     .eq('source_id', sourceId);
 
-  // Apply search filter - search text columns with case-insensitive matching
   if (rawSearch) {
     const likeTerm = `%${cleanedSearch}%`;
     query = query.or(
-      [
-        `certificate_id.ilike.${likeTerm}`,
-        `batch_id.ilike.${likeTerm}`,
-        `pos_number.ilike.${likeTerm}`,
-        `feedstock_type.ilike.${likeTerm}`,
-        `feedstock_country.ilike.${likeTerm}`,
-        `production_pathway.ilike.${likeTerm}`,
-        `producer_name.ilike.${likeTerm}`,
-        `production_country.ilike.${likeTerm}`,
-        `certification_scheme.ilike.${likeTerm}`,
-        `airline_name.ilike.${likeTerm}`,
-        `destination_airport.ilike.${likeTerm}`,
-        `supplier_name.ilike.${likeTerm}`,
-        `verification_status.ilike.${likeTerm}`,
-        `astm_pathway.ilike.${likeTerm}`,
-        `production_facility.ilike.${likeTerm}`,
-        `certifying_body.ilike.${likeTerm}`,
-        `certificate_status.ilike.${likeTerm}`,
-        `retirement_beneficiary.ilike.${likeTerm}`,
-        `chain_of_custody_type.ilike.${likeTerm}`,
-        `sustainability_tier.ilike.${likeTerm}`,
-      ].join(','),
+      `certificate_id.ilike.${likeTerm},batch_id.ilike.${likeTerm},pos_number.ilike.${likeTerm},feedstock_type.ilike.${likeTerm},feedstock_country.ilike.${likeTerm},production_pathway.ilike.${likeTerm},producer_name.ilike.${likeTerm},production_country.ilike.${likeTerm},certification_scheme.ilike.${likeTerm},airline_name.ilike.${likeTerm},destination_airport.ilike.${likeTerm},supplier_name.ilike.${likeTerm},verification_status.ilike.${likeTerm},astm_pathway.ilike.${likeTerm},production_facility.ilike.${likeTerm},certifying_body.ilike.${likeTerm},certificate_status.ilike.${likeTerm},retirement_beneficiary.ilike.${likeTerm},chain_of_custody_type.ilike.${likeTerm},sustainability_tier.ilike.${likeTerm},issuance_date::text.ilike.${likeTerm},delivery_date::text.ilike.${likeTerm},expiration_date::text.ilike.${likeTerm},volume_liters::text.ilike.${likeTerm},volume_mt::text.ilike.${likeTerm},ghg_reduction_percentage::text.ilike.${likeTerm},blend_percentage::text.ilike.${likeTerm},energy_content_mj::text.ilike.${likeTerm}`,
     );
   }
 
@@ -261,32 +225,10 @@ export async function getPaginatedFuelEuCertificates(
     .eq('company_id', companyId)
     .eq('source_id', sourceId);
 
-  // Apply search filter - search text columns with case-insensitive matching
   if (rawSearch) {
     const likeTerm = `%${cleanedSearch}%`;
     query = query.or(
-      [
-        `certificate_id.ilike.${likeTerm}`,
-        `imo_number.ilike.${likeTerm}`,
-        `ship_name.ilike.${likeTerm}`,
-        `ship_type.ilike.${likeTerm}`,
-        `flag_state.ilike.${likeTerm}`,
-        `shipowner_company.ilike.${likeTerm}`,
-        `voyage_id.ilike.${likeTerm}`,
-        `port_of_departure.ilike.${likeTerm}`,
-        `port_of_arrival.ilike.${likeTerm}`,
-        `voyage_type.ilike.${likeTerm}`,
-        `fuel_type.ilike.${likeTerm}`,
-        `fuel_category.ilike.${likeTerm}`,
-        `compliance_status.ilike.${likeTerm}`,
-        `certification_scheme.ilike.${likeTerm}`,
-        `pos_number.ilike.${likeTerm}`,
-        `feedstock_type.ilike.${likeTerm}`,
-        `verifier_name.ilike.${likeTerm}`,
-        `verification_status.ilike.${likeTerm}`,
-        `reporting_period.ilike.${likeTerm}`,
-        `pool_id.ilike.${likeTerm}`,
-      ].join(','),
+      `certificate_id.ilike.${likeTerm},imo_number.ilike.${likeTerm},ship_name.ilike.${likeTerm},ship_type.ilike.${likeTerm},flag_state.ilike.${likeTerm},shipowner_company.ilike.${likeTerm},voyage_id.ilike.${likeTerm},port_of_departure.ilike.${likeTerm},port_of_arrival.ilike.${likeTerm},voyage_type.ilike.${likeTerm},fuel_type.ilike.${likeTerm},fuel_category.ilike.${likeTerm},compliance_status.ilike.${likeTerm},certification_scheme.ilike.${likeTerm},pos_number.ilike.${likeTerm},feedstock_type.ilike.${likeTerm},verifier_name.ilike.${likeTerm},verification_status.ilike.${likeTerm},reporting_period.ilike.${likeTerm},pool_id.ilike.${likeTerm},departure_date::text.ilike.${likeTerm},arrival_date::text.ilike.${likeTerm},gross_tonnage::text.ilike.${likeTerm},total_fuel_consumption_mt::text.ilike.${likeTerm},ghg_intensity_gco2eq_mj::text.ilike.${likeTerm},target_ghg_intensity::text.ilike.${likeTerm},wtw_emission_factor::text.ilike.${likeTerm},distance_nm::text.ilike.${likeTerm},multiplier::text.ilike.${likeTerm}`,
     );
   }
 

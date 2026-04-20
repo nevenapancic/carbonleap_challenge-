@@ -104,5 +104,4 @@ export const lightTheme = createTheme({
   },
 })
 
-// Default export for backwards compatibility
 export default darkTheme
